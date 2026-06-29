@@ -11,8 +11,6 @@ jobs:
     - parallel:
       - uses: actions/checkout@v7.0.0
       - uses: crystal-lang/install-crystal@v1
-        with:
-          crystal: 1.20.2
 
     - run: shards install --frozen
 
