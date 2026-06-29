@@ -126,7 +126,7 @@ module Mqhole
       end
 
       def ready_for_amqp? : Bool
-        !!connection_url && ready != false
+        !!connection_url && ready == true
       end
     end
 

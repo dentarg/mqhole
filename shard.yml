@@ -6,7 +6,7 @@ authors:
 
 targets:
   mqhole:
-    main: src/mqhole.cr
+    main: src/main.cr
 
 dependencies:
   amqp-client:

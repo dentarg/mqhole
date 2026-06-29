@@ -79,18 +79,29 @@ describe Mqhole::CloudAMQP::Client do
           "apikey": "instance-key"
         }
         JSON
+      Mqhole::CloudAMQP::Response.new(200, <<-JSON),
+        {
+          "id": 23,
+          "name": "mqhole-lavinmq-amazon-web-services-eu-west-1",
+          "plan": "lemming",
+          "region": "amazon-web-services::eu-west-1",
+          "url": "amqps://user:pass@example/vhost",
+          "ready": true
+        }
+        JSON
     })
     client = Mqhole::CloudAMQP::Client.new(transport)
 
     instance = client.ensure_instance("amazon-web-services::eu-west-1")
 
     instance.id.should eq(23)
-    post = transport.requests.last
+    post = transport.requests[1]
     post.method.should eq("POST")
     post.path.should eq("/instances")
     body = post.body.not_nil!
     body.should contain(%("plan":"lemming"))
     body.should contain(%("region":"amazon-web-services::eu-west-1"))
+    transport.requests.last.path.should eq("/instances/23")
   end
 
   it "raises API errors with the CloudAMQP message" do
