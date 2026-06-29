@@ -13,6 +13,21 @@ module Mqhole
     class Error < Exception
     end
 
+    class TimeoutError < Error
+    end
+
+    class IdleTimeoutError < TimeoutError
+    end
+
+    def self.receive_forever(receiver : Receiver, timeout : Time::Span, & : ReceiveResult ->) : Nil
+      loop do
+        begin
+          yield receiver.receive(timeout)
+        rescue IdleTimeoutError
+        end
+      end
+    end
+
     struct Manifest
       include JSON::Serializable
 
@@ -183,7 +198,7 @@ module Mqhole
       messages = [] of BrokerMessage
       temp = File.tempfile("mqhole", ".payload")
 
-      header = next_message(deadline)
+      header = next_message(deadline, idle: true)
       validate_type(header, Transfer::HEADER_TYPE)
       messages << header
 
@@ -259,11 +274,19 @@ module Mqhole
       end
     end
 
-    private def next_message(deadline : Time::Instant) : BrokerMessage
+    private def next_message(deadline : Time::Instant, idle : Bool = false) : BrokerMessage
       remaining = deadline - Time.instant
-      raise Transfer::Error.new("timed out waiting for transfer") unless remaining.positive?
+      raise timeout_error(idle) unless remaining.positive?
 
-      @broker.get(remaining) || raise Transfer::Error.new("timed out waiting for transfer")
+      @broker.get(remaining) || raise timeout_error(idle)
+    end
+
+    private def timeout_error(idle : Bool) : Transfer::TimeoutError
+      if idle
+        Transfer::IdleTimeoutError.new("timed out waiting for transfer")
+      else
+        Transfer::TimeoutError.new("timed out waiting for transfer")
+      end
     end
 
     private def validate_type(message : BrokerMessage, expected : String) : Nil

@@ -211,37 +211,50 @@ module Mqhole
       decryption_passphrase : String?,
     ) : Nil
       with_broker(api_key, region, name) do |broker, instance|
-        result = Receiver.new(broker, decryption_passphrase: decryption_passphrase).receive(timeout)
-
-        begin
-          delivered = false
-
-          if path = output_path
-            copy_file(result.path, path)
-            delivered = true
-          end
-
-          if command = hook
-            Hook.run(command, hook_mode, result.path)
-            delivered = true
-          end
-
-          should_echo = echo.nil? ? !delivered : echo
-          if should_echo
-            File.open(result.path) { |file| IO.copy(file, @output) }
-          end
-
-          result.ack
-          @error.puts logfmt(
-            event: "received",
-            transfer_id: result.manifest.id,
-            bytes: result.bytes_written.to_s,
-            region: region,
-            instance_id: instance.id.to_s
-          )
-        ensure
-          result.cleanup
+        receiver = Receiver.new(broker, decryption_passphrase: decryption_passphrase)
+        Transfer.receive_forever(receiver, timeout) do |result|
+          deliver_result(result, output_path, hook, hook_mode, echo, region, instance)
         end
+      end
+    end
+
+    private def deliver_result(
+      result : ReceiveResult,
+      output_path : String?,
+      hook : String?,
+      hook_mode : Hook::Mode,
+      echo : Bool?,
+      region : String,
+      instance : CloudAMQP::Instance,
+    ) : Nil
+      begin
+        delivered = false
+
+        if path = output_path
+          copy_file(result.path, path)
+          delivered = true
+        end
+
+        if command = hook
+          Hook.run(command, hook_mode, result.path)
+          delivered = true
+        end
+
+        should_echo = echo.nil? ? !delivered : echo
+        if should_echo
+          File.open(result.path) { |file| IO.copy(file, @output) }
+        end
+
+        result.ack
+        @error.puts logfmt(
+          event: "received",
+          transfer_id: result.manifest.id,
+          bytes: result.bytes_written.to_s,
+          region: region,
+          instance_id: instance.id.to_s
+        )
+      ensure
+        result.cleanup
       end
     end
 
@@ -262,6 +275,7 @@ module Mqhole
                    end
       passphrase ||= raise UsageError.new("missing encryption passphrase")
       raise UsageError.new("missing encryption passphrase") if passphrase.empty?
+      @error.puts "***"
 
       passphrase
     end
@@ -272,7 +286,6 @@ module Mqhole
       passphrase = input.noecho do
         input.gets.try(&.chomp)
       end
-      @error.puts
       passphrase
     end
 

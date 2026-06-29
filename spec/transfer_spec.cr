@@ -1,5 +1,8 @@
 require "./spec_helper"
 
+private class StopReceiveLoop < Exception
+end
+
 describe Mqhole::Transfer do
   it "round trips binary data through chunked broker messages" do
     data = Bytes[0, 1, 255, 65, 66]
@@ -65,6 +68,58 @@ describe Mqhole::Transfer do
 
     expect_raises(Mqhole::Encryption::Error, /check the passphrase/) do
       receiver.receive(timeout: 1.second)
+    end
+    broker.acked_count.should eq(0)
+  end
+
+  it "keeps receiving transfers across idle waits" do
+    broker = Mqhole::MemoryBroker.new
+    sender = Mqhole::Sender.new(broker)
+    sender.send(IO::Memory.new("one"), source_name: nil, size: 3_u64)
+
+    spawn do
+      sleep 20.milliseconds
+      sender.send(IO::Memory.new("two"), source_name: nil, size: 3_u64)
+    end
+
+    receiver = Mqhole::Receiver.new(broker)
+    payloads = [] of String
+
+    expect_raises(StopReceiveLoop) do
+      Mqhole::Transfer.receive_forever(receiver, 5.milliseconds) do |result|
+        payloads << File.read(result.path)
+        result.ack
+        result.cleanup
+        raise StopReceiveLoop.new if payloads.size == 2
+      end
+    end
+
+    payloads.should eq(["one", "two"])
+    broker.acked_count.should eq(6)
+  end
+
+  it "reports timeouts after a transfer has started" do
+    broker = Mqhole::MemoryBroker.new
+    manifest = Mqhole::Transfer::Manifest.new(
+      id: "partial",
+      version: 1,
+      source_name: nil,
+      size: nil,
+      chunk_size: Mqhole::Transfer::DEFAULT_CHUNK_SIZE
+    )
+    broker.publish(
+      Mqhole::Transfer::HEADER_TYPE,
+      manifest.id,
+      "#{manifest.id}:header",
+      manifest.to_json.to_slice
+    )
+
+    receiver = Mqhole::Receiver.new(broker)
+
+    expect_raises(Mqhole::Transfer::TimeoutError, /timed out waiting for transfer/) do
+      Mqhole::Transfer.receive_forever(receiver, 5.milliseconds) do |result|
+        result.cleanup
+      end
     end
     broker.acked_count.should eq(0)
   end

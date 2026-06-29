@@ -56,6 +56,9 @@ Receive and echo to stdout:
 bin/mqhole receive demo
 ```
 
+`receive` keeps running and processes transfers until you stop it, for example
+with Ctrl-C.
+
 Send and receive a file:
 
 ```sh
@@ -82,10 +85,10 @@ Receive encrypted data:
 bin/mqhole receive demo --encrypted --output ./received.bin --no-echo
 ```
 
-The receiver prompts for the passphrase without echoing it. If encrypted data is
-received without `--encrypted`, or if the passphrase is wrong, `mqhole` exits
-with a clear error and leaves the AMQP messages unacknowledged so the receive can
-be retried.
+The receiver prompts for the passphrase without echoing it, then prints `***`
+after the passphrase has been read. If encrypted data is received without
+`--encrypted`, or if the passphrase is wrong, `mqhole` exits with a clear error
+and leaves the AMQP messages unacknowledged so the receive can be retried.
 
 Run a hook with the temporary payload path:
 
