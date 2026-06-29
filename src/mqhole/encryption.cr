@@ -1,55 +1,8 @@
+require "aes_gcm"
 require "base64"
 require "json"
 require "openssl"
 require "random/secure"
-
-lib LibCrypto
-  fun evp_cipher_ctx_ctrl = EVP_CIPHER_CTX_ctrl(ctx : EVP_CIPHER_CTX, type : LibC::Int, arg : LibC::Int, ptr : Void*) : LibC::Int
-end
-
-class OpenSSL::Cipher
-  private EVP_CTRL_GCM_GET_TAG = 0x10
-  private EVP_CTRL_GCM_SET_TAG = 0x11
-
-  def authenticated_data(data : Bytes) : Nil
-    return if data.empty?
-
-    bytes_written = 0
-    status = LibCrypto.evp_cipherupdate(
-      @ctx,
-      Pointer(UInt8).null,
-      pointerof(bytes_written),
-      data.to_unsafe,
-      data.size
-    )
-    raise Error.new("EVP_CipherUpdate AAD") unless status == 1
-  end
-
-  def gcm_tag(size : Int32 = 16) : Bytes
-    tag = Bytes.new(size)
-    status = LibCrypto.evp_cipher_ctx_ctrl(
-      @ctx,
-      EVP_CTRL_GCM_GET_TAG,
-      tag.size,
-      tag.to_unsafe.as(Void*)
-    )
-    raise Error.new("EVP_CIPHER_CTX_ctrl GET_TAG") unless status == 1
-
-    tag
-  end
-
-  def gcm_tag=(tag : Bytes) : Bytes
-    status = LibCrypto.evp_cipher_ctx_ctrl(
-      @ctx,
-      EVP_CTRL_GCM_SET_TAG,
-      tag.size,
-      tag.to_unsafe.as(Void*)
-    )
-    raise Error.new("EVP_CIPHER_CTX_ctrl SET_TAG") unless status == 1
-
-    tag
-  end
-end
 
 module Mqhole
   module Encryption
@@ -124,17 +77,17 @@ module Mqhole
       end
 
       def encrypt_chunk(chunk : Bytes, manifest, index : Int32) : Bytes
-        cipher = OpenSSL::Cipher.new(ALGORITHM)
-        cipher.encrypt
-        cipher.key = @key
-        cipher.iv = nonce(index)
-        cipher.authenticated_data(aad(manifest, index))
+        encrypted = cipher.encrypt(
+          key: @key,
+          plaintext: chunk,
+          iv: nonce(index),
+          aad: aad(manifest, index)
+        )
 
-        encrypted = IO::Memory.new
-        encrypted.write(cipher.update(chunk))
-        encrypted.write(cipher.final)
-        encrypted.write(cipher.gcm_tag(TAG_SIZE))
-        encrypted.to_slice
+        IO::Memory.new.tap do |io|
+          io.write(encrypted.ciphertext)
+          io.write(encrypted.auth_tag)
+        end.to_slice
       end
 
       def decrypt_chunk(payload : Bytes, manifest, index : Int32) : Bytes
@@ -142,17 +95,13 @@ module Mqhole
 
         ciphertext = payload[0, payload.size - TAG_SIZE]
         tag = payload[payload.size - TAG_SIZE, TAG_SIZE]
-        cipher = OpenSSL::Cipher.new(ALGORITHM)
-        cipher.decrypt
-        cipher.key = @key
-        cipher.iv = nonce(index)
-        cipher.authenticated_data(aad(manifest, index))
-
-        decrypted = IO::Memory.new
-        decrypted.write(cipher.update(ciphertext))
-        cipher.gcm_tag = tag
-        decrypted.write(cipher.final)
-        decrypted.to_slice
+        cipher.decrypt(
+          key: @key,
+          ciphertext: ciphertext,
+          iv: nonce(index),
+          auth_tag: tag,
+          aad: aad(manifest, index)
+        )
       rescue OpenSSL::Cipher::Error
         raise Error.new("could not decrypt transfer; check the passphrase")
       end
@@ -210,6 +159,10 @@ module Mqhole
             json.field "chunk_index", index
           end
         end.to_slice
+      end
+
+      private def cipher : AesGcm::Cipher
+        AesGcm::Cipher.new(iv_size: NONCE_SIZE, tag_size: TAG_SIZE, key_size: KEY_SIZE)
       end
     end
 

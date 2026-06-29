@@ -1,5 +1,9 @@
 version: 2.0
 shards:
+  aes_gcm:
+    git: https://github.com/dentarg/aes_gcm.git
+    version: 0.1.0+git.commit.3ad41f04df2461ba678d310e95a9e2e8a0df2142
+
   amq-protocol:
     git: https://github.com/cloudamqp/amq-protocol.cr.git
     version: 1.3.0
