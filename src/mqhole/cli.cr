@@ -1,6 +1,7 @@
 require "option_parser"
 require "./amqp_broker"
 require "./cloudamqp"
+require "./encryption"
 require "./hook"
 require "./protocol"
 require "./transfer"
@@ -48,7 +49,7 @@ module Mqhole
     rescue ex : UsageError
       @error.puts "error: #{ex.message}"
       64
-    rescue ex : CloudAMQP::APIError | Transfer::Error | Hook::Error | AMQP::Client::Error | IO::Error
+    rescue ex : CloudAMQP::APIError | Encryption::Error | Transfer::Error | Hook::Error | AMQP::Client::Error | IO::Error
       @error.puts "error: #{ex.message}"
       1
     end
@@ -83,6 +84,7 @@ module Mqhole
       file_path = nil
       data = nil
       chunk_size = Transfer::DEFAULT_CHUNK_SIZE
+      encrypted = false
 
       parser = OptionParser.new do |parser|
         parser.banner = "Usage: mqhole send NAME [FILE] [options]"
@@ -91,6 +93,7 @@ module Mqhole
         parser.on("--file PATH", "Read payload from a file") { |value| file_path = value }
         parser.on("--data DATA", "Read payload from an argument") { |value| data = value }
         parser.on("--chunk-size BYTES", "AMQP payload chunk size") { |value| chunk_size = value.to_i }
+        parser.on("--encrypted", "Encrypt payload and print passphrase") { encrypted = true }
       end
       parse_options(parser, argv)
 
@@ -103,16 +106,27 @@ module Mqhole
       raise UsageError.new("too many arguments") unless argv.empty?
       raise UsageError.new("--file and --data are mutually exclusive") if file_path && data
 
+      encryption = generated_encryption(encrypted)
+
       if payload = data
         bytes = payload.to_slice
         io = IO::Memory.new(bytes)
-        send_payload(api_key, region, name, io, nil, bytes.size.to_u64, chunk_size)
+        send_payload(api_key, region, name, io, nil, bytes.size.to_u64, chunk_size, encryption)
       elsif path = file_path
         File.open(path) do |file|
-          send_payload(api_key, region, name, file, File.basename(path), File.size(path).to_u64, chunk_size)
+          send_payload(
+            api_key,
+            region,
+            name,
+            file,
+            File.basename(path),
+            File.size(path).to_u64,
+            chunk_size,
+            encryption
+          )
         end
       else
-        send_payload(api_key, region, name, @input, nil, nil, chunk_size)
+        send_payload(api_key, region, name, @input, nil, nil, chunk_size, encryption)
       end
     end
 
@@ -124,6 +138,7 @@ module Mqhole
       hook_mode = Hook::Mode::File
       echo = nil
       timeout = DEFAULT_TIMEOUT
+      encrypted = false
 
       parser = OptionParser.new do |parser|
         parser.banner = "Usage: mqhole receive NAME [options]"
@@ -137,6 +152,7 @@ module Mqhole
           hook_mode = Hook::Mode.parse(value)
         end
         parser.on("--timeout SECONDS", "Receive wait timeout") { |value| timeout = value.to_f.seconds }
+        parser.on("--encrypted", "Prompt for payload decryption passphrase") { encrypted = true }
       end
       parse_options(parser, argv)
 
@@ -144,7 +160,18 @@ module Mqhole
       raise UsageError.new("too many arguments") unless argv.empty?
       raise UsageError.new("--timeout must be positive") unless timeout.positive?
 
-      receive_payload(api_key, region, name, output_path, hook, hook_mode, echo, timeout)
+      decryption_passphrase = encrypted ? read_passphrase : nil
+      receive_payload(
+        api_key,
+        region,
+        name,
+        output_path,
+        hook,
+        hook_mode,
+        echo,
+        timeout,
+        decryption_passphrase
+      )
     end
 
     private def send_payload(
@@ -155,11 +182,12 @@ module Mqhole
       source_name : String?,
       size : UInt64?,
       chunk_size : Int32,
+      encryption : Encryption::Context?,
     ) : Nil
       raise UsageError.new("--chunk-size must be positive") unless chunk_size.positive?
 
       with_broker(api_key, region, name) do |broker, instance|
-        manifest = Sender.new(broker, chunk_size: chunk_size).send(input, source_name, size)
+        manifest = Sender.new(broker, chunk_size: chunk_size, encryption: encryption).send(input, source_name, size)
         bytes = manifest.size.try(&.to_s) || "unknown"
         @error.puts logfmt(
           event: "sent",
@@ -180,9 +208,10 @@ module Mqhole
       hook_mode : Hook::Mode,
       echo : Bool?,
       timeout : Time::Span,
+      decryption_passphrase : String?,
     ) : Nil
       with_broker(api_key, region, name) do |broker, instance|
-        result = Receiver.new(broker).receive(timeout)
+        result = Receiver.new(broker, decryption_passphrase: decryption_passphrase).receive(timeout)
 
         begin
           delivered = false
@@ -214,6 +243,37 @@ module Mqhole
           result.cleanup
         end
       end
+    end
+
+    private def generated_encryption(enabled : Bool) : Encryption::Context?
+      return unless enabled
+
+      passphrase = Encryption.generate_passphrase
+      @error.puts logfmt(event: "encryption_passphrase", passphrase: passphrase)
+      Encryption::Context.generate(passphrase)
+    end
+
+    private def read_passphrase : String
+      @error.print "Passphrase: "
+      passphrase = if input = @input.as?(IO::FileDescriptor)
+                     read_passphrase(input)
+                   else
+                     @input.gets.try(&.chomp)
+                   end
+      passphrase ||= raise UsageError.new("missing encryption passphrase")
+      raise UsageError.new("missing encryption passphrase") if passphrase.empty?
+
+      passphrase
+    end
+
+    private def read_passphrase(input : IO::FileDescriptor) : String?
+      return input.gets.try(&.chomp) unless input.tty?
+
+      passphrase = input.noecho do
+        input.gets.try(&.chomp)
+      end
+      @error.puts
+      passphrase
     end
 
     private def with_broker(api_key : String?, region : String, name : String, & : Broker, CloudAMQP::Instance -> _) : Nil

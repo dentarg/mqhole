@@ -64,6 +64,29 @@ bin/mqhole send demo --file ./payload.bin
 bin/mqhole receive demo --output ./received.bin --no-echo
 ```
 
+Send encrypted data:
+
+```sh
+bin/mqhole send demo --encrypted --file ./payload.bin
+```
+
+The sender prints a generated passphrase as a logfmt line:
+
+```text
+at=info event=encryption_passphrase passphrase=...
+```
+
+Receive encrypted data:
+
+```sh
+bin/mqhole receive demo --encrypted --output ./received.bin --no-echo
+```
+
+The receiver prompts for the passphrase without echoing it. If encrypted data is
+received without `--encrypted`, or if the passphrase is wrong, `mqhole` exits
+with a clear error and leaves the AMQP messages unacknowledged so the receive can
+be retried.
+
 Run a hook with the temporary payload path:
 
 ```sh
