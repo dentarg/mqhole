@@ -1,5 +1,6 @@
 require "json"
 require "random/secure"
+require "./encryption"
 
 module Mqhole
   module Transfer
@@ -20,8 +21,16 @@ module Mqhole
       getter source_name : String?
       getter size : UInt64?
       getter chunk_size : Int32
+      getter encryption : Encryption::Metadata?
 
-      def initialize(@id : String, @version : Int32, @source_name : String?, @size : UInt64?, @chunk_size : Int32)
+      def initialize(
+        @id : String,
+        @version : Int32,
+        @source_name : String?,
+        @size : UInt64?,
+        @chunk_size : Int32,
+        @encryption : Encryption::Metadata? = nil,
+      )
       end
     end
   end
@@ -82,7 +91,11 @@ module Mqhole
   end
 
   class Sender
-    def initialize(@broker : Broker, @chunk_size : Int32 = Transfer::DEFAULT_CHUNK_SIZE)
+    def initialize(
+      @broker : Broker,
+      @chunk_size : Int32 = Transfer::DEFAULT_CHUNK_SIZE,
+      @encryption : Encryption::Context? = nil,
+    )
       raise ArgumentError.new("chunk size must be positive") unless @chunk_size.positive?
     end
 
@@ -93,11 +106,12 @@ module Mqhole
         version: 1,
         source_name: source_name,
         size: size,
-        chunk_size: @chunk_size
+        chunk_size: @chunk_size,
+        encryption: @encryption.try(&.metadata)
       )
 
       publish_json(Transfer::HEADER_TYPE, id, "#{id}:header", manifest)
-      publish_chunks(input, id)
+      publish_chunks(input, manifest)
       @broker.publish(Transfer::END_TYPE, id, "#{id}:end", Bytes.empty)
 
       manifest
@@ -107,7 +121,7 @@ module Mqhole
       @broker.publish(type, correlation_id, message_id, object.to_json.to_slice)
     end
 
-    private def publish_chunks(input : IO, id : String) : Nil
+    private def publish_chunks(input : IO, manifest : Transfer::Manifest) : Nil
       buffer = Bytes.new(@chunk_size)
       index = 0
 
@@ -117,11 +131,19 @@ module Mqhole
 
         @broker.publish(
           Transfer::CHUNK_TYPE,
-          id,
-          "#{id}:chunk:#{index}",
-          buffer[0, bytes_read].dup
+          manifest.id,
+          "#{manifest.id}:chunk:#{index}",
+          chunk_body(buffer[0, bytes_read], manifest, index)
         )
         index += 1
+      end
+    end
+
+    private def chunk_body(chunk : Bytes, manifest : Transfer::Manifest, index : Int32) : Bytes
+      if encryption = @encryption
+        encryption.encrypt_chunk(chunk, manifest, index)
+      else
+        chunk.dup
       end
     end
   end
@@ -153,7 +175,7 @@ module Mqhole
   end
 
   class Receiver
-    def initialize(@broker : Broker)
+    def initialize(@broker : Broker, @decryption_passphrase : String? = nil)
     end
 
     def receive(timeout : Time::Span) : ReceiveResult
@@ -166,7 +188,8 @@ module Mqhole
       messages << header
 
       manifest = Transfer::Manifest.from_json(String.new(header.body))
-      bytes_written = receive_chunks(manifest, temp, messages, deadline)
+      decryption = decryption_context(manifest)
+      bytes_written = receive_chunks(manifest, temp, messages, deadline, decryption)
       temp.close
 
       ReceiveResult.new(manifest, temp.path, bytes_written, messages)
@@ -181,8 +204,10 @@ module Mqhole
       temp : File,
       messages : Array(BrokerMessage),
       deadline : Time::Instant,
+      decryption : Encryption::Context?,
     ) : UInt64
       bytes_written = 0_u64
+      chunk_index = 0
 
       loop do
         message = next_message(deadline)
@@ -191,14 +216,46 @@ module Mqhole
 
         case message.type
         when Transfer::CHUNK_TYPE
-          temp.write(message.body)
-          bytes_written += message.body.size
+          chunk = chunk_body(message.body, manifest, chunk_index, decryption)
+          temp.write(chunk)
+          bytes_written += chunk.size
+          chunk_index += 1
         when Transfer::END_TYPE
           validate_size(manifest, bytes_written)
           return bytes_written
         else
           raise Transfer::Error.new("unexpected message type #{message.type.inspect}")
         end
+      end
+    end
+
+    private def decryption_context(manifest : Transfer::Manifest) : Encryption::Context?
+      metadata = manifest.encryption
+      passphrase = @decryption_passphrase
+
+      if metadata && passphrase
+        return Encryption::Context.from_metadata(passphrase, metadata)
+      end
+
+      if metadata
+        raise Transfer::Error.new("transfer is encrypted; rerun receive with --encrypted")
+      end
+
+      if passphrase
+        raise Transfer::Error.new("transfer is not encrypted; rerun receive without --encrypted")
+      end
+    end
+
+    private def chunk_body(
+      body : Bytes,
+      manifest : Transfer::Manifest,
+      index : Int32,
+      decryption : Encryption::Context?,
+    ) : Bytes
+      if decryption
+        decryption.decrypt_chunk(body, manifest, index)
+      else
+        body
       end
     end
 
