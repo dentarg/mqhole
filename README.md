@@ -31,57 +31,50 @@ Set the API key in the environment:
 export CLOUDAMQP_API_KEY=...
 ```
 
-The send and receive commands default to `digital-ocean::ams3`. CloudAMQP
-currently reports DigitalOcean Amsterdam as not supporting shared plans, so the
-free LavinMQ `lemming` plan cannot be created there. List regions with shared
-plans and pass one with `--region`:
+The send and receive commands default to `scaleway::nl-ams`, which CloudAMQP
+currently reports as supporting shared plans. List regions with shared plans and
+pass one with `--region` if you want a different broker location:
 
 ```sh
 bin/mqhole regions --shared-only
-bin/mqhole regions digital-ocean
+bin/mqhole regions scaleway
 ```
 
 `mqhole` creates an instance named after the selected region, for example
-`mqhole-lavinmq-amazon-web-services-eu-west-1`, and reuses it on later runs.
+`mqhole-lavinmq-scaleway-nl-ams`, and reuses it on later runs.
 
 ## Usage
 
 Send stdin:
 
 ```sh
-printf 'hello\n' | bin/mqhole send demo \
-  --region amazon-web-services::eu-west-1
+printf 'hello\n' | bin/mqhole send demo
 ```
 
 Receive and echo to stdout:
 
 ```sh
-bin/mqhole receive demo \
-  --region amazon-web-services::eu-west-1
+bin/mqhole receive demo
 ```
 
 Send and receive a file:
 
 ```sh
-bin/mqhole send demo --file ./payload.bin \
-  --region amazon-web-services::eu-west-1
+bin/mqhole send demo --file ./payload.bin
 
-bin/mqhole receive demo --output ./received.bin --no-echo \
-  --region amazon-web-services::eu-west-1
+bin/mqhole receive demo --output ./received.bin --no-echo
 ```
 
 Run a hook with the temporary payload path:
 
 ```sh
-bin/mqhole receive demo --hook 'sha256sum' --hook-mode file --no-echo \
-  --region amazon-web-services::eu-west-1
+bin/mqhole receive demo --hook 'sha256sum' --hook-mode file --no-echo
 ```
 
 Run a hook with the payload as one process argument:
 
 ```sh
-bin/mqhole receive demo --hook 'printf %s' --hook-mode argument --no-echo \
-  --region amazon-web-services::eu-west-1
+bin/mqhole receive demo --hook 'printf %s' --hook-mode argument --no-echo
 ```
 
 Argument hook mode is intended for text payloads. It rejects payloads containing
@@ -98,4 +91,4 @@ shards build
 ```
 
 The live smoke test used during development sent and received data through a
-real CloudAMQP LavinMQ instance in `amazon-web-services::eu-west-1`.
+real CloudAMQP LavinMQ instance in `scaleway::nl-ams`.

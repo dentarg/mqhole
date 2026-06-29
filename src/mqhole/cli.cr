@@ -7,7 +7,7 @@ require "./transfer"
 
 module Mqhole
   class CLI
-    DEFAULT_REGION            = "digital-ocean::ams3"
+    DEFAULT_REGION            = "scaleway::nl-ams"
     DEFAULT_TIMEOUT           = 300.seconds
     DEFAULT_PROVISION_TIMEOUT = 3.minutes
 
@@ -225,8 +225,31 @@ module Mqhole
       url = instance.connection_url || raise UsageError.new("CloudAMQP instance has no AMQP URL")
       queue_name = Protocol.queue_name(name)
 
-      AMQPBroker.open(url, queue_name) do |broker|
+      with_ready_broker(url, queue_name, DEFAULT_PROVISION_TIMEOUT, 5.seconds) do |broker|
         yield broker, instance
+      end
+    end
+
+    private def with_ready_broker(
+      url : String,
+      queue_name : String,
+      timeout : Time::Span,
+      poll_interval : Time::Span,
+      & : Broker -> _
+    ) : Nil
+      deadline = Time.instant + timeout
+
+      loop do
+        begin
+          AMQPBroker.open(url, queue_name) do |broker|
+            yield broker
+          end
+          return
+        rescue ex : AMQP::Client::Error
+          raise ex if Time.instant >= deadline
+
+          sleep poll_interval
+        end
       end
     end
 
