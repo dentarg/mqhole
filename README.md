@@ -17,8 +17,7 @@ CloudAMQP API key can access the same broker.
 Install dependencies and build:
 
 ```sh
-shards install
-shards build
+make
 ```
 
 The binary is written to `bin/mqhole`.
@@ -85,9 +84,7 @@ NUL bytes because those cannot be represented safely as process arguments.
 Run the checks used by CI:
 
 ```sh
-crystal tool format --check
-crystal spec
-shards build
+make check
 ```
 
 The live smoke test used during development sent and received data through a
