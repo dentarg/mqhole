@@ -7,19 +7,16 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
     steps:
     - parallel:
       - uses: actions/checkout@v7.0.0
-
       - uses: crystal-lang/install-crystal@v1
         with:
           crystal: 1.20.2
 
     - run: shards install --frozen
 
-    - run: crystal tool format --check
-
-    - run: crystal spec
-
-    - run: shards build --release
+    - parallel:
+      - run: crystal tool format --check
+      - run: crystal spec
+      - run: shards build --release
