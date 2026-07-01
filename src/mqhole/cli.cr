@@ -85,6 +85,7 @@ module Mqhole
       data = nil
       chunk_size = Transfer::DEFAULT_CHUNK_SIZE
       encrypted = false
+      verbose = false
 
       parser = OptionParser.new do |parser|
         parser.banner = "Usage: mqhole send NAME [FILE] [options]"
@@ -94,6 +95,7 @@ module Mqhole
         parser.on("--data DATA", "Read payload from an argument") { |value| data = value }
         parser.on("--chunk-size BYTES", "AMQP payload chunk size") { |value| chunk_size = value.to_i }
         parser.on("--encrypted", "Encrypt payload and print passphrase") { encrypted = true }
+        parser.on("--verbose", "Write progress log lines") { verbose = true }
       end
       parse_options(parser, argv)
 
@@ -111,7 +113,7 @@ module Mqhole
       if payload = data
         bytes = payload.to_slice
         io = IO::Memory.new(bytes)
-        send_payload(api_key, region, name, io, nil, bytes.size.to_u64, chunk_size, encryption)
+        send_payload(api_key, region, name, io, nil, bytes.size.to_u64, chunk_size, encryption, verbose)
       elsif path = file_path
         File.open(path) do |file|
           send_payload(
@@ -122,11 +124,12 @@ module Mqhole
             File.basename(path),
             File.size(path).to_u64,
             chunk_size,
-            encryption
+            encryption,
+            verbose
           )
         end
       else
-        send_payload(api_key, region, name, @input, nil, nil, chunk_size, encryption)
+        send_payload(api_key, region, name, @input, nil, nil, chunk_size, encryption, verbose)
       end
     end
 
@@ -140,6 +143,7 @@ module Mqhole
       timeout = DEFAULT_TIMEOUT
       encrypted = false
       listen = false
+      verbose = false
 
       parser = OptionParser.new do |parser|
         parser.banner = "Usage: mqhole receive NAME [options]"
@@ -155,6 +159,7 @@ module Mqhole
         parser.on("--timeout SECONDS", "Receive wait timeout") { |value| timeout = value.to_f.seconds }
         parser.on("--encrypted", "Prompt for payload decryption passphrase") { encrypted = true }
         parser.on("--listen", "Keep receiving until interrupted") { listen = true }
+        parser.on("--verbose", "Write progress log lines") { verbose = true }
       end
       parse_options(parser, argv)
 
@@ -173,7 +178,8 @@ module Mqhole
         echo,
         timeout,
         decryption_passphrase,
-        listen
+        listen,
+        verbose
       )
     end
 
@@ -186,16 +192,21 @@ module Mqhole
       size : UInt64?,
       chunk_size : Int32,
       encryption : Encryption::Context?,
+      verbose : Bool,
     ) : Nil
       raise UsageError.new("--chunk-size must be positive") unless chunk_size.positive?
 
       with_broker(api_key, region, name) do |broker, instance|
         started_at = Time.instant
-        report_progress = progress_reporter("send_progress", started_at)
+        reporter = progress_reporter("send_progress", started_at, verbose: verbose, inline: !verbose && error_tty?)
         bytes_sent = 0_u64
-        manifest = Sender.new(broker, chunk_size: chunk_size, encryption: encryption).send(input, source_name, size) do |progress|
-          bytes_sent = progress.bytes
-          report_progress.call(progress)
+        manifest = begin
+          Sender.new(broker, chunk_size: chunk_size, encryption: encryption).send(input, source_name, size) do |progress|
+            bytes_sent = progress.bytes
+            reporter[:call].call(progress)
+          end
+        ensure
+          reporter[:finish].call
         end
         duration = Time.instant - started_at
         rate = rate_bytes_per_second(bytes_sent, duration)
@@ -223,14 +234,15 @@ module Mqhole
       timeout : Time::Span,
       decryption_passphrase : String?,
       listen : Bool,
+      verbose : Bool,
     ) : Nil
       with_broker(api_key, region, name) do |broker, instance|
         receiver = Receiver.new(broker, decryption_passphrase: decryption_passphrase)
 
         if listen
-          listen_for_payloads(receiver, output_path, hook, hook_mode, echo, timeout, region, instance)
+          listen_for_payloads(receiver, output_path, hook, hook_mode, echo, timeout, region, instance, verbose)
         else
-          receive_one(receiver, output_path, hook, hook_mode, echo, timeout, region, instance)
+          receive_one(receiver, output_path, hook, hook_mode, echo, timeout, region, instance, verbose)
         end
       end
     end
@@ -244,10 +256,11 @@ module Mqhole
       timeout : Time::Span,
       region : String,
       instance : CloudAMQP::Instance,
+      verbose : Bool,
     ) : Nil
       loop do
         begin
-          receive_one(receiver, output_path, hook, hook_mode, echo, timeout, region, instance)
+          receive_one(receiver, output_path, hook, hook_mode, echo, timeout, region, instance, verbose)
         rescue Transfer::IdleTimeoutError
         rescue ex : Transfer::ReceiveError
           ex.reject(requeue: false)
@@ -271,11 +284,16 @@ module Mqhole
       timeout : Time::Span,
       region : String,
       instance : CloudAMQP::Instance,
+      verbose : Bool,
     ) : Nil
       started_at = Time.instant
-      report_progress = progress_reporter("receive_progress", started_at)
-      result = receiver.receive(timeout) do |progress|
-        report_progress.call(progress)
+      reporter = progress_reporter("receive_progress", started_at, verbose: verbose, inline: false)
+      result = begin
+        receiver.receive(timeout) do |progress|
+          reporter[:call].call(progress)
+        end
+      ensure
+        reporter[:finish].call
       end
 
       deliver_result(result, output_path, hook, hook_mode, echo, region, instance, started_at)
@@ -326,38 +344,79 @@ module Mqhole
       end
     end
 
-    private def progress_reporter(event : String, started_at : Time::Instant) : Proc(Transfer::Progress, Nil)
+    private def progress_reporter(
+      event : String,
+      started_at : Time::Instant,
+      verbose : Bool,
+      inline : Bool,
+    )
       last_report_at = started_at
+      inline_width = 0
+      inline_active = false
 
-      ->(progress : Transfer::Progress) do
+      report = ->(progress : Transfer::Progress) do
         now = Time.instant
         if progress.complete || now - last_report_at >= 1.second
           last_report_at = now
           elapsed = now - started_at
           rate = rate_bytes_per_second(progress.bytes, elapsed)
-          percent = progress.percent
 
-          if total = progress.total
-            @error.puts logfmt(
-              event: event,
-              transfer_id: progress.transfer_id,
-              bytes: progress.bytes.to_s,
-              total: total.to_s,
-              percent: percent ? sprintf("%.1f", percent) : "unknown",
-              rate: rate.round.to_i64.to_s,
-              rate_human: "#{human_bytes(rate)}/s"
-            )
-          else
-            @error.puts logfmt(
-              event: event,
-              transfer_id: progress.transfer_id,
-              bytes: progress.bytes.to_s,
-              total: "unknown",
-              rate: rate.round.to_i64.to_s,
-              rate_human: "#{human_bytes(rate)}/s"
-            )
+          if verbose
+            @error.puts progress_log_line(event, progress, rate)
+          elsif inline
+            text = inline_progress_text(event, progress, rate)
+            padding = inline_width > text.size ? inline_width - text.size : 0
+            inline_width = Math.max(inline_width, text.size)
+            inline_active = true
+            @error.print "\r#{text}#{" " * padding}"
+            @error.flush
           end
         end
+      end
+
+      finish = -> do
+        if inline && inline_active
+          @error.print "\r#{" " * inline_width}\r"
+          @error.flush
+        end
+      end
+
+      {call: report, finish: finish}
+    end
+
+    private def progress_log_line(event : String, progress : Transfer::Progress, rate : Float64) : String
+      if total = progress.total
+        percent = progress.percent
+        logfmt(
+          event: event,
+          transfer_id: progress.transfer_id,
+          bytes: progress.bytes.to_s,
+          total: total.to_s,
+          percent: percent ? sprintf("%.1f", percent) : "unknown",
+          rate: rate.round.to_i64.to_s,
+          rate_human: "#{human_bytes(rate)}/s"
+        )
+      else
+        logfmt(
+          event: event,
+          transfer_id: progress.transfer_id,
+          bytes: progress.bytes.to_s,
+          total: "unknown",
+          rate: rate.round.to_i64.to_s,
+          rate_human: "#{human_bytes(rate)}/s"
+        )
+      end
+    end
+
+    private def inline_progress_text(event : String, progress : Transfer::Progress, rate : Float64) : String
+      verb = event == "send_progress" ? "Sending" : "Receiving"
+
+      if total = progress.total
+        current_percent = progress.percent
+        percent = current_percent ? sprintf("%.1f", current_percent) : "unknown"
+        "#{verb} #{human_bytes(progress.bytes.to_f64)} / #{human_bytes(total.to_f64)} (#{percent}%) at #{human_bytes(rate)}/s"
+      else
+        "#{verb} #{human_bytes(progress.bytes.to_f64)} at #{human_bytes(rate)}/s"
       end
     end
 
@@ -388,6 +447,14 @@ module Mqhole
                 sprintf("%.2f", amount)
               end
       "#{value} #{units[unit_index]}"
+    end
+
+    private def error_tty? : Bool
+      if error = @error.as?(IO::FileDescriptor)
+        error.tty?
+      else
+        false
+      end
     end
 
     private def generated_encryption(enabled : Bool) : Encryption::Context?

@@ -5,7 +5,18 @@ describe Mqhole::CLI do
     Mqhole::CLI::DEFAULT_REGION.should eq("scaleway::nl-ams")
   end
 
-  it "documents listen mode for receive" do
+  it "documents verbose mode for send" do
+    input = IO::Memory.new
+    output = IO::Memory.new
+    error = IO::Memory.new
+
+    status = Mqhole::CLI.run(["send", "--help"], input, output, error)
+
+    status.should eq(0)
+    output.to_s.should contain("--verbose")
+  end
+
+  it "documents listen and verbose modes for receive" do
     input = IO::Memory.new
     output = IO::Memory.new
     error = IO::Memory.new
@@ -14,6 +25,7 @@ describe Mqhole::CLI do
 
     status.should eq(0)
     output.to_s.should contain("--listen")
+    output.to_s.should contain("--verbose")
   end
 
   it "marks when an encrypted receive passphrase has been read" do

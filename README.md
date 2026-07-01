@@ -86,14 +86,17 @@ The sender prints a generated passphrase as a logfmt line:
 at=info event=encryption_passphrase passphrase=...
 ```
 
-Send and receive progress are written to stderr as logfmt lines. File and
-`--data` payloads include a known total size; stdin payloads report bytes and
-rate without a total:
+On an interactive terminal, `send` updates transfer progress in place on stderr.
+Use `--verbose` to write progress as logfmt lines instead. File and `--data`
+payloads include a known total size; stdin payloads report bytes and rate
+without a total:
 
 ```text
 at=info event=send_progress transfer_id=... bytes=... total=... percent=... rate=... rate_human=".../s"
 at=info event=receive_progress transfer_id=... bytes=... total=... percent=... rate=... rate_human=".../s"
 ```
+
+Receive progress is reported in verbose mode.
 
 Receive encrypted data:
 
