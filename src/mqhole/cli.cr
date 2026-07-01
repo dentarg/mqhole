@@ -139,6 +139,7 @@ module Mqhole
       echo = nil
       timeout = DEFAULT_TIMEOUT
       encrypted = false
+      listen = false
 
       parser = OptionParser.new do |parser|
         parser.banner = "Usage: mqhole receive NAME [options]"
@@ -153,6 +154,7 @@ module Mqhole
         end
         parser.on("--timeout SECONDS", "Receive wait timeout") { |value| timeout = value.to_f.seconds }
         parser.on("--encrypted", "Prompt for payload decryption passphrase") { encrypted = true }
+        parser.on("--listen", "Keep receiving until interrupted") { listen = true }
       end
       parse_options(parser, argv)
 
@@ -170,7 +172,8 @@ module Mqhole
         hook_mode,
         echo,
         timeout,
-        decryption_passphrase
+        decryption_passphrase,
+        listen
       )
     end
 
@@ -187,12 +190,22 @@ module Mqhole
       raise UsageError.new("--chunk-size must be positive") unless chunk_size.positive?
 
       with_broker(api_key, region, name) do |broker, instance|
-        manifest = Sender.new(broker, chunk_size: chunk_size, encryption: encryption).send(input, source_name, size)
-        bytes = manifest.size.try(&.to_s) || "unknown"
+        started_at = Time.instant
+        report_progress = progress_reporter("send_progress", started_at)
+        bytes_sent = 0_u64
+        manifest = Sender.new(broker, chunk_size: chunk_size, encryption: encryption).send(input, source_name, size) do |progress|
+          bytes_sent = progress.bytes
+          report_progress.call(progress)
+        end
+        duration = Time.instant - started_at
+        rate = rate_bytes_per_second(bytes_sent, duration)
+        bytes = manifest.size.try(&.to_s) || bytes_sent.to_s
         @error.puts logfmt(
           event: "sent",
           transfer_id: manifest.id,
           bytes: bytes,
+          rate: rate.round.to_i64.to_s,
+          rate_human: "#{human_bytes(rate)}/s",
           region: region,
           instance_id: instance.id.to_s
         )
@@ -209,13 +222,63 @@ module Mqhole
       echo : Bool?,
       timeout : Time::Span,
       decryption_passphrase : String?,
+      listen : Bool,
     ) : Nil
       with_broker(api_key, region, name) do |broker, instance|
         receiver = Receiver.new(broker, decryption_passphrase: decryption_passphrase)
-        Transfer.receive_forever(receiver, timeout) do |result|
-          deliver_result(result, output_path, hook, hook_mode, echo, region, instance)
+
+        if listen
+          listen_for_payloads(receiver, output_path, hook, hook_mode, echo, timeout, region, instance)
+        else
+          receive_one(receiver, output_path, hook, hook_mode, echo, timeout, region, instance)
         end
       end
+    end
+
+    private def listen_for_payloads(
+      receiver : Receiver,
+      output_path : String?,
+      hook : String?,
+      hook_mode : Hook::Mode,
+      echo : Bool?,
+      timeout : Time::Span,
+      region : String,
+      instance : CloudAMQP::Instance,
+    ) : Nil
+      loop do
+        begin
+          receive_one(receiver, output_path, hook, hook_mode, echo, timeout, region, instance)
+        rescue Transfer::IdleTimeoutError
+        rescue ex : Transfer::ReceiveError
+          ex.reject(requeue: false)
+          @error.puts logfmt(
+            "error",
+            event: "receive_failed",
+            transfer_id: ex.transfer_id || "unknown",
+            error: ex.message || ex.class.name,
+            action: "dropped"
+          )
+        end
+      end
+    end
+
+    private def receive_one(
+      receiver : Receiver,
+      output_path : String?,
+      hook : String?,
+      hook_mode : Hook::Mode,
+      echo : Bool?,
+      timeout : Time::Span,
+      region : String,
+      instance : CloudAMQP::Instance,
+    ) : Nil
+      started_at = Time.instant
+      report_progress = progress_reporter("receive_progress", started_at)
+      result = receiver.receive(timeout) do |progress|
+        report_progress.call(progress)
+      end
+
+      deliver_result(result, output_path, hook, hook_mode, echo, region, instance, started_at)
     end
 
     private def deliver_result(
@@ -226,6 +289,7 @@ module Mqhole
       echo : Bool?,
       region : String,
       instance : CloudAMQP::Instance,
+      started_at : Time::Instant,
     ) : Nil
       begin
         delivered = false
@@ -245,17 +309,85 @@ module Mqhole
           File.open(result.path) { |file| IO.copy(file, @output) }
         end
 
+        duration = Time.instant - started_at
+        rate = rate_bytes_per_second(result.bytes_written, duration)
         result.ack
         @error.puts logfmt(
           event: "received",
           transfer_id: result.manifest.id,
           bytes: result.bytes_written.to_s,
+          rate: rate.round.to_i64.to_s,
+          rate_human: "#{human_bytes(rate)}/s",
           region: region,
           instance_id: instance.id.to_s
         )
       ensure
         result.cleanup
       end
+    end
+
+    private def progress_reporter(event : String, started_at : Time::Instant) : Proc(Transfer::Progress, Nil)
+      last_report_at = started_at
+
+      ->(progress : Transfer::Progress) do
+        now = Time.instant
+        if progress.complete || now - last_report_at >= 1.second
+          last_report_at = now
+          elapsed = now - started_at
+          rate = rate_bytes_per_second(progress.bytes, elapsed)
+          percent = progress.percent
+
+          if total = progress.total
+            @error.puts logfmt(
+              event: event,
+              transfer_id: progress.transfer_id,
+              bytes: progress.bytes.to_s,
+              total: total.to_s,
+              percent: percent ? sprintf("%.1f", percent) : "unknown",
+              rate: rate.round.to_i64.to_s,
+              rate_human: "#{human_bytes(rate)}/s"
+            )
+          else
+            @error.puts logfmt(
+              event: event,
+              transfer_id: progress.transfer_id,
+              bytes: progress.bytes.to_s,
+              total: "unknown",
+              rate: rate.round.to_i64.to_s,
+              rate_human: "#{human_bytes(rate)}/s"
+            )
+          end
+        end
+      end
+    end
+
+    private def rate_bytes_per_second(bytes : UInt64?, elapsed : Time::Span) : Float64
+      return 0.0 unless bytes
+
+      seconds = elapsed.total_seconds
+      return 0.0 unless seconds.positive?
+
+      bytes.to_f64 / seconds
+    end
+
+    private def human_bytes(bytes : Float64) : String
+      units = ["B", "KiB", "MiB", "GiB", "TiB"]
+      amount = bytes
+      unit_index = 0
+
+      while amount >= 1024.0 && unit_index < units.size - 1
+        amount /= 1024.0
+        unit_index += 1
+      end
+
+      value = if unit_index.zero?
+                amount.round.to_i64.to_s
+              elsif amount >= 10
+                sprintf("%.1f", amount)
+              else
+                sprintf("%.2f", amount)
+              end
+      "#{value} #{units[unit_index]}"
     end
 
     private def generated_encryption(enabled : Bool) : Encryption::Context?
@@ -356,12 +488,45 @@ module Mqhole
       parser.parse(argv)
     end
 
-    private def logfmt(**fields : String) : String
+    private def logfmt(level : String = "info", **fields : String) : String
       String.build do |io|
-        io << "at=info"
+        io << "at=" << level
         fields.each do |key, value|
-          io << ' ' << key << '=' << value
+          io << ' ' << key << '='
+          write_logfmt_value(io, value)
         end
+      end
+    end
+
+    private def write_logfmt_value(io : IO, value : String) : Nil
+      unless logfmt_quoted?(value)
+        io << value
+        return
+      end
+
+      io << '"'
+      value.each_char do |char|
+        case char
+        when '\\', '"'
+          io << '\\' << char
+        when '\n'
+          io << "\\n"
+        when '\r'
+          io << "\\r"
+        when '\t'
+          io << "\\t"
+        else
+          io << char
+        end
+      end
+      io << '"'
+    end
+
+    private def logfmt_quoted?(value : String) : Bool
+      return true if value.empty?
+
+      value.each_char.any? do |char|
+        char.whitespace? || char == '=' || char == '"' || char == '\\'
       end
     end
 

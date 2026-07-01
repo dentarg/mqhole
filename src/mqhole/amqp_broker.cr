@@ -37,10 +37,10 @@ module Mqhole
             message.properties.type,
             message.properties.correlation_id,
             message.properties.message_id,
-            body
-          ) do
-            message.ack
-          end
+            body,
+            -> { message.ack },
+            ->(requeue : Bool) { message.reject(requeue) }
+          )
         end
 
         return nil if Time.instant >= deadline

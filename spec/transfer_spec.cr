@@ -25,6 +25,39 @@ describe Mqhole::Transfer do
     result.try(&.cleanup)
   end
 
+  it "reports send progress as chunks are published" do
+    broker = Mqhole::MemoryBroker.new
+    sender = Mqhole::Sender.new(broker, chunk_size: 2)
+    progress = [] of Mqhole::Transfer::Progress
+
+    sender.send(IO::Memory.new("hello"), source_name: nil, size: 5_u64) do |event|
+      progress << event
+    end
+
+    progress.map(&.bytes).should eq([2_u64, 4_u64, 5_u64, 5_u64])
+    progress.map(&.complete).should eq([false, false, false, true])
+    progress.last.total.should eq(5_u64)
+    progress.last.percent.should eq(100.0)
+  end
+
+  it "reports receive progress from the manifest size" do
+    broker = Mqhole::MemoryBroker.new
+    sender = Mqhole::Sender.new(broker)
+    sender.send(IO::Memory.new("hello"), source_name: nil, size: 5_u64)
+    receiver = Mqhole::Receiver.new(broker)
+    progress = [] of Mqhole::Transfer::Progress
+
+    result = receiver.receive(timeout: 1.second) do |event|
+      progress << event
+    end
+
+    progress.map(&.bytes).should eq([5_u64, 5_u64])
+    progress.map(&.complete).should eq([false, true])
+    progress.last.total.should eq(5_u64)
+  ensure
+    result.try(&.cleanup)
+  end
+
   it "round trips encrypted binary data with the passphrase" do
     data = Bytes[0, 1, 255, 65, 66]
     broker = Mqhole::MemoryBroker.new
@@ -66,10 +99,27 @@ describe Mqhole::Transfer do
 
     receiver = Mqhole::Receiver.new(broker, decryption_passphrase: "wrong")
 
-    expect_raises(Mqhole::Encryption::Error, /check the passphrase/) do
+    expect_raises(Mqhole::Transfer::ReceiveError, /check the passphrase/) do
       receiver.receive(timeout: 1.second)
     end
     broker.acked_count.should eq(0)
+  end
+
+  it "lets callers reject a failed transfer after receive errors" do
+    broker = Mqhole::MemoryBroker.new
+    sender_encryption = Mqhole::Encryption::Context.generate("right")
+    sender = Mqhole::Sender.new(broker, encryption: sender_encryption)
+    sender.send(IO::Memory.new("secret"), source_name: nil, size: 6_u64)
+
+    receiver = Mqhole::Receiver.new(broker, decryption_passphrase: "wrong")
+    error = expect_raises(Mqhole::Transfer::ReceiveError, /check the passphrase/) do
+      receiver.receive(timeout: 1.second)
+    end
+
+    error.messages.size.should eq(3)
+    error.reject(requeue: false)
+    broker.acked_count.should eq(0)
+    broker.rejected_count.should eq(3)
   end
 
   it "keeps receiving transfers across idle waits" do
@@ -116,7 +166,7 @@ describe Mqhole::Transfer do
 
     receiver = Mqhole::Receiver.new(broker)
 
-    expect_raises(Mqhole::Transfer::TimeoutError, /timed out waiting for transfer/) do
+    expect_raises(Mqhole::Transfer::ReceiveError, /timed out waiting for transfer/) do
       Mqhole::Transfer.receive_forever(receiver, 5.milliseconds) do |result|
         result.cleanup
       end

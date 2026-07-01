@@ -56,8 +56,15 @@ Receive and echo to stdout:
 bin/mqhole receive demo
 ```
 
-`receive` keeps running and processes transfers until you stop it, for example
-with Ctrl-C.
+By default, `receive` exits after one transfer. Use `--listen` to keep receiving
+until you stop it, for example with Ctrl-C:
+
+```sh
+bin/mqhole receive demo --listen
+```
+
+In listen mode, transfer errors such as a bad decryption passphrase are logged
+and the failed transfer is dropped so later transfers can still be received.
 
 Send and receive a file:
 
@@ -77,6 +84,15 @@ The sender prints a generated passphrase as a logfmt line:
 
 ```text
 at=info event=encryption_passphrase passphrase=...
+```
+
+Send and receive progress are written to stderr as logfmt lines. File and
+`--data` payloads include a known total size; stdin payloads report bytes and
+rate without a total:
+
+```text
+at=info event=send_progress transfer_id=... bytes=... total=... percent=... rate=... rate_human=".../s"
+at=info event=receive_progress transfer_id=... bytes=... total=... percent=... rate=... rate_human=".../s"
 ```
 
 Receive encrypted data:
@@ -104,6 +120,11 @@ bin/mqhole receive demo --hook 'printf %s' --hook-mode argument --no-echo
 
 Argument hook mode is intended for text payloads. It rejects payloads containing
 NUL bytes because those cannot be represented safely as process arguments.
+
+Payloads sent to the same name must be sent sequentially. The current protocol
+expects each transfer's AMQP messages to stay contiguous in the queue, so
+concurrent sends to the same name can fail with a transfer id mismatch. Use
+different names if you need overlapping transfers.
 
 ## Development
 

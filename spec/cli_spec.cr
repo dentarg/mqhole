@@ -5,6 +5,17 @@ describe Mqhole::CLI do
     Mqhole::CLI::DEFAULT_REGION.should eq("scaleway::nl-ams")
   end
 
+  it "documents listen mode for receive" do
+    input = IO::Memory.new
+    output = IO::Memory.new
+    error = IO::Memory.new
+
+    status = Mqhole::CLI.run(["receive", "--help"], input, output, error)
+
+    status.should eq(0)
+    output.to_s.should contain("--listen")
+  end
+
   it "marks when an encrypted receive passphrase has been read" do
     original_api_key = ENV["CLOUDAMQP_API_KEY"]?
     ENV.delete("CLOUDAMQP_API_KEY")
