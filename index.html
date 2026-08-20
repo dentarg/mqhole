@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A terminal demonstration of encrypted file transfer with mqhole.">
+    <title>mqhole — encrypted file transfer over AMQP</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="assets/asciinema-player.css">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">Terminal demo</p>
+        <h1>Move bytes through a message queue.</h1>
+        <p class="lede">
+          <code>mqhole</code> sends files through AMQP durable queues, with
+          optional AES-256-GCM encryption and a one-time passphrase.
+        </p>
+      </header>
+
+      <section aria-labelledby="demo-heading">
+        <div class="section-heading">
+          <h2 id="demo-heading">Encrypted round trip</h2>
+          <p>Send, receive, and verify a file against a live CloudAMQP broker.</p>
+        </div>
+        <div id="player" aria-label="mqhole terminal demonstration"></div>
+      </section>
+
+      <footer>
+        <a href="https://github.com/dentarg/mqhole">View mqhole on GitHub</a>
+        <span>Recorded as text, not pixels.</span>
+      </footer>
+    </main>
+
+    <script src="assets/asciinema-player.min.js"></script>
+    <script>
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      AsciinemaPlayer.create('demo.cast', document.getElementById('player'), {
+        autoPlay: !reduceMotion,
+        fit: 'width',
+        idleTimeLimit: 1.5,
+        poster: 'npt:0:00',
+        speed: 1.1,
+        theme: 'asciinema'
+      });
+    </script>
+  </body>
+</html>
