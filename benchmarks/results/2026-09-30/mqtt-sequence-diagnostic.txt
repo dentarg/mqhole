@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/<redacted>/mqtt-qos1", line 266, in <module>
+    mqtt_run()
+    ~~~~~~~~^^
+  File "/<redacted>/mqtt-qos1", line 153, in mqtt_run
+    collector.accept(messages.get(timeout=300))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/<redacted>/mqtt-qos1", line 54, in accept
+    raise ValueError(
+        f"unexpected chunk index: expected {self.index}, received {index}"
+    )
+ValueError: unexpected chunk index: expected 42, received 41

@@ -1,0 +1,25 @@
+{
+  "hosted_qos0_default": {
+    "error": "RuntimeError",
+    "reasons": [
+      "MQTT disconnected: Keep alive timeout",
+      "MQTT disconnected: Keep alive timeout"
+    ]
+  },
+  "hosted_qos0_keepalive300": {
+    "seconds": 731.7516723970002,
+    "verified": true,
+    "trials": 1
+  },
+  "hosted_qos1_duplicate_index": {
+    "expected": 42,
+    "received": 41,
+    "sender_keepalive_timeouts_recorded": true,
+    "probe_deduplicates": false
+  },
+  "local_rabbitmq_qos0_256mib": {
+    "expected": 1559,
+    "received": 1568,
+    "verified": false
+  }
+}

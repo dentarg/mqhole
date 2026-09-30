@@ -1,0 +1,4 @@
+{"timestamp": 1790795996.4281871, "broker": "rabbitmq-cloud", "binary": "mqtt-qos1", "mode": "send", "queue": "mqhole-benchmark-5700ed180d984e12a99916c796a5ef4f", "reason": "Keep alive timeout"}
+{"timestamp": 1790795996.4301305, "broker": "rabbitmq-cloud", "binary": "mqtt-qos1", "mode": "send", "queue": "mqhole-benchmark-5700ed180d984e12a99916c796a5ef4f", "reason": "Keep alive timeout"}
+{"timestamp": 1790796117.6861947, "broker": "rabbitmq-cloud", "binary": "mqtt-qos1", "mode": "send", "queue": "mqhole-benchmark-5700ed180d984e12a99916c796a5ef4f", "reason": "Keep alive timeout"}
+{"timestamp": 1790796117.6880481, "broker": "rabbitmq-cloud", "binary": "mqtt-qos1", "mode": "send", "queue": "mqhole-benchmark-5700ed180d984e12a99916c796a5ef4f", "reason": "Keep alive timeout"}

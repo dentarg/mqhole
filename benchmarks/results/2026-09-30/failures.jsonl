@@ -1,0 +1,5 @@
+{"broker": "rabbitmq-cloud", "binary": "mqtt-qos0", "size": 16777216, "count": 1, "chunk": 131072, "scenario": "protocol", "error": "RuntimeError"}
+{"broker": "rabbitmq-cloud", "binary": "mqtt-qos1", "size": 16777216, "count": 1, "chunk": 131072, "scenario": "protocol", "error": "RuntimeError"}
+{"broker": "rabbitmq-cloud", "binary": "mqtt-qos0", "size": 16777216, "count": 1, "chunk": 131072, "scenario": "mqtt-disconnect-diagnostic", "error": "RuntimeError"}
+{"broker": "rabbitmq-cloud", "binary": "mqtt-qos1", "size": 16777216, "count": 1, "chunk": 131072, "scenario": "mqtt-sequence-diagnostic", "error": "RuntimeError"}
+{"broker": "rabbitmq-local", "binary": "mqtt-qos0", "size": 268435456, "count": 1, "chunk": 131072, "scenario": "protocol-large", "error": "RuntimeError"}

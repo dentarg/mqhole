@@ -1,0 +1,12 @@
+__pycache__/
+.work/
+connections.json
+*-cloud.json
+tailcat-address
+tailcat-stream-address
+tailcat-stream.out
+*.private.json
+certs/
+payload-*
+tailcat-source-*
+tailcat-inbox/

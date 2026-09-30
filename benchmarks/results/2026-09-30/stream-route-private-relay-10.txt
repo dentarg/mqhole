@@ -1,0 +1,3 @@
+pong in 42.27ms via DERP(bench)
+pong in 45.02ms via DERP(bench)
+2026/09/30 19:16:36 no direct path to the server after 2s

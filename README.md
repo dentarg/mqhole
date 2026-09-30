@@ -12,7 +12,7 @@ CloudAMQP API key can access the same broker.
 ## Requirements
 
 - Crystal 1.20.2 or newer
-- A CloudAMQP team API key
+- A CloudAMQP team API key or an existing AMQP broker URL
 
 Install dependencies and build:
 
@@ -141,6 +141,13 @@ Receivers subscribe instead of polling and discard chunk buffers after writing
 them to the temporary file. Broker prefetch is unlimited because acknowledgements
 are deferred until the entire transfer is delivered; the local delivery buffer
 is bounded. Acknowledgement metadata still grows with the number of chunks.
+
+## Benchmarks
+
+See [the benchmark report](benchmarks/RESULTS.md) for comparisons with tailcat,
+AMQP, MQTT, and streams on local brokers and free CloudAMQP plans. It includes
+small and large files, many-file transfers, encryption, memory use, and added
+network delay, with raw measurements and reproduction instructions.
 
 ## Development
 

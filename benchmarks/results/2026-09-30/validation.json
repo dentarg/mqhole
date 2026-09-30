@@ -1,0 +1,31 @@
+{
+  "completed_at": "2026-09-30T19:25:57.345380+00:00",
+  "production_code_commit": "10821b22adc35ebeb3fe22b47c2deadf5cf9f597",
+  "test_commit": "726989a",
+  "make_check": {
+    "exit_code": 0,
+    "regular_examples": 26,
+    "release_build": "passed",
+    "crystal_format": "passed"
+  },
+  "integration": {
+    "lavinmq": {
+      "examples": 30,
+      "failures": 0,
+      "integration_examples": 4
+    },
+    "rabbitmq": {
+      "examples": 30,
+      "failures": 0,
+      "integration_examples": 4
+    }
+  },
+  "python_checks": {
+    "ruff_check": "passed",
+    "ruff_format_check": "passed",
+    "py_compile": "passed",
+    "timeout_address_redaction": "passed"
+  },
+  "verified_benchmark_trials": 859,
+  "recorded_failed_cases": 5
+}

@@ -1,0 +1,90 @@
+{"binary": "mqhole-cli", "broker": "lavinmq-local", "size": 1024, "count": 1, "seconds": 0.12687488699975802, "mib_per_second": 0.007697051190294755, "verified": true}
+{"binary": "mqhole-cli", "broker": "lavinmq-local", "size": 1024, "count": 1, "seconds": 0.12760563800020464, "mib_per_second": 0.007652972982263009, "verified": true}
+{"binary": "mqhole-cli", "broker": "lavinmq-local", "size": 1024, "count": 1, "seconds": 0.12997805800023343, "mib_per_second": 0.007513287358072746, "verified": true}
+{"binary": "mqhole-cli", "broker": "lavinmq-local", "size": 1048576, "count": 1, "seconds": 0.12430780000067898, "mib_per_second": 8.044547486115416, "verified": true}
+{"binary": "mqhole-cli", "broker": "lavinmq-local", "size": 1048576, "count": 1, "seconds": 0.22951140700024553, "mib_per_second": 4.357081911832514, "verified": true}
+{"binary": "mqhole-cli", "broker": "lavinmq-local", "size": 1048576, "count": 1, "seconds": 0.12973947400041652, "mib_per_second": 7.707754387818696, "verified": true}
+{"binary": "mqhole-cli", "broker": "lavinmq-local", "size": 16777216, "count": 1, "seconds": 0.22974540700033685, "mib_per_second": 69.64230627677593, "verified": true}
+{"binary": "mqhole-cli", "broker": "lavinmq-local", "size": 16777216, "count": 1, "seconds": 0.13249906200053374, "mib_per_second": 120.75557183895798, "verified": true}
+{"binary": "mqhole-cli", "broker": "lavinmq-local", "size": 16777216, "count": 1, "seconds": 0.22634556899993186, "mib_per_second": 70.6883729630458, "verified": true}
+{"binary": "mqhole-tar-cli", "broker": "lavinmq-local", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 0.24990972700015845, "mib_per_second": 3.9076610251324104, "verified": true}
+{"binary": "mqhole-tar-cli", "broker": "lavinmq-local", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 0.1966464030001589, "mib_per_second": 4.966083717276084, "verified": true}
+{"binary": "mqhole-tar-cli", "broker": "lavinmq-local", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 0.19914140499986388, "mib_per_second": 4.903864668428284, "verified": true}
+{"binary": "mqhole-cli", "broker": "rabbitmq-local", "size": 1024, "count": 1, "seconds": 0.1229930069994225, "mib_per_second": 0.00793998393749805, "verified": true}
+{"binary": "mqhole-cli", "broker": "rabbitmq-local", "size": 1024, "count": 1, "seconds": 0.12510421800016047, "mib_per_second": 0.007805991801161711, "verified": true}
+{"binary": "mqhole-cli", "broker": "rabbitmq-local", "size": 1024, "count": 1, "seconds": 0.12515284300025087, "mib_per_second": 0.007802958978710875, "verified": true}
+{"binary": "mqhole-cli", "broker": "rabbitmq-local", "size": 1048576, "count": 1, "seconds": 0.1338070220008376, "mib_per_second": 7.473449338060451, "verified": true}
+{"binary": "mqhole-cli", "broker": "rabbitmq-local", "size": 1048576, "count": 1, "seconds": 0.12451075900025899, "mib_per_second": 8.031434456181573, "verified": true}
+{"binary": "mqhole-cli", "broker": "rabbitmq-local", "size": 1048576, "count": 1, "seconds": 0.1268267619998369, "mib_per_second": 7.884771196802187, "verified": true}
+{"binary": "mqhole-cli", "broker": "rabbitmq-local", "size": 16777216, "count": 1, "seconds": 0.1272090960001151, "mib_per_second": 125.77716926771906, "verified": true}
+{"binary": "mqhole-cli", "broker": "rabbitmq-local", "size": 16777216, "count": 1, "seconds": 0.1263090109996483, "mib_per_second": 126.67346433457982, "verified": true}
+{"binary": "mqhole-cli", "broker": "rabbitmq-local", "size": 16777216, "count": 1, "seconds": 0.1255196350002734, "mib_per_second": 127.47009661050359, "verified": true}
+{"binary": "mqhole-tar-cli", "broker": "rabbitmq-local", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 0.2038730790000045, "mib_per_second": 4.790051265179442, "verified": true}
+{"binary": "mqhole-tar-cli", "broker": "rabbitmq-local", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 0.20099953299995832, "mib_per_second": 4.858531188727699, "verified": true}
+{"binary": "mqhole-tar-cli", "broker": "rabbitmq-local", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 0.21160496500033332, "mib_per_second": 4.615026400720143, "verified": true}
+{"binary": "mqhole-cli", "broker": "lavinmq-cloud", "size": 1024, "count": 1, "seconds": 0.6406440280006791, "mib_per_second": 0.0015243449674348089, "verified": true}
+{"binary": "mqhole-cli", "broker": "lavinmq-cloud", "size": 1024, "count": 1, "seconds": 0.6355015620001723, "mib_per_second": 0.0015366799365942947, "verified": true}
+{"binary": "mqhole-cli", "broker": "lavinmq-cloud", "size": 1024, "count": 1, "seconds": 0.6398357769994618, "mib_per_second": 0.0015262705448883041, "verified": true}
+{"binary": "mqhole-cli", "broker": "lavinmq-cloud", "size": 1048576, "count": 1, "seconds": 0.8398765170004481, "mib_per_second": 1.1906512204572883, "verified": true}
+{"binary": "mqhole-cli", "broker": "lavinmq-cloud", "size": 1048576, "count": 1, "seconds": 0.8413553529999263, "mib_per_second": 1.1885584330502117, "verified": true}
+{"binary": "mqhole-cli", "broker": "lavinmq-cloud", "size": 1048576, "count": 1, "seconds": 0.8563705399992614, "mib_per_second": 1.1677188241445842, "verified": true}
+{"binary": "mqhole-cli", "broker": "lavinmq-cloud", "size": 16777216, "count": 1, "seconds": 2.3491147690001526, "mib_per_second": 6.811076330174382, "verified": true}
+{"binary": "mqhole-cli", "broker": "lavinmq-cloud", "size": 16777216, "count": 1, "seconds": 1.9549541299993507, "mib_per_second": 8.184335250876353, "verified": true}
+{"binary": "mqhole-cli", "broker": "lavinmq-cloud", "size": 16777216, "count": 1, "seconds": 3.083155846000409, "mib_per_second": 5.189487914065658, "verified": true}
+{"binary": "mqhole-tar-cli", "broker": "lavinmq-cloud", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 1.0315289540003505, "mib_per_second": 0.9467136101345617, "verified": true}
+{"binary": "mqhole-tar-cli", "broker": "lavinmq-cloud", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 1.0136632620005912, "mib_per_second": 0.9633993226435293, "verified": true}
+{"binary": "mqhole-tar-cli", "broker": "lavinmq-cloud", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 1.1048108489994775, "mib_per_second": 0.8839182751367622, "verified": true}
+{"binary": "mqhole-cli", "broker": "rabbitmq-cloud", "size": 1024, "count": 1, "seconds": 0.6416689380002936, "mib_per_second": 0.0015219101972480911, "verified": true}
+{"binary": "mqhole-cli", "broker": "rabbitmq-cloud", "size": 1024, "count": 1, "seconds": 0.5350990590004585, "mib_per_second": 0.0018250125534217455, "verified": true}
+{"binary": "mqhole-cli", "broker": "rabbitmq-cloud", "size": 1024, "count": 1, "seconds": 0.5325783050002428, "mib_per_second": 0.0018336505464666922, "verified": true}
+{"binary": "mqhole-cli", "broker": "rabbitmq-cloud", "size": 1048576, "count": 1, "seconds": 2.4455209590005325, "mib_per_second": 0.40891082790339, "verified": true}
+{"binary": "mqhole-cli", "broker": "rabbitmq-cloud", "size": 1048576, "count": 1, "seconds": 2.4758108890000585, "mib_per_second": 0.40390807086396024, "verified": true}
+{"binary": "mqhole-cli", "broker": "rabbitmq-cloud", "size": 1048576, "count": 1, "seconds": 2.357010339000226, "mib_per_second": 0.42426627641530434, "verified": true}
+{"binary": "mqhole-cli", "broker": "rabbitmq-cloud", "size": 16777216, "count": 1, "seconds": 26.17376539199995, "mib_per_second": 0.6112991295050892, "verified": true}
+{"binary": "mqhole-cli", "broker": "rabbitmq-cloud", "size": 16777216, "count": 1, "seconds": 28.098393192999538, "mib_per_second": 0.5694275786555032, "verified": true}
+{"binary": "mqhole-cli", "broker": "rabbitmq-cloud", "size": 16777216, "count": 1, "seconds": 29.608662675000232, "mib_per_second": 0.5403823933429265, "verified": true}
+{"binary": "mqhole-tar-cli", "broker": "rabbitmq-cloud", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 3.4058024900004966, "mib_per_second": 0.28673491867693646, "verified": true}
+{"binary": "mqhole-tar-cli", "broker": "rabbitmq-cloud", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 3.3435742909996407, "mib_per_second": 0.2920714226774466, "verified": true}
+{"binary": "mqhole-tar-cli", "broker": "rabbitmq-cloud", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 3.1444367120002426, "mib_per_second": 0.3105683432180729, "verified": true}
+{"binary": "mqhole-cli", "broker": "lavinmq-local", "size": 268435456, "count": 1, "seconds": 1.43406553099976, "mib_per_second": 178.5134601356253, "verified": true}
+{"binary": "mqhole-cli", "broker": "lavinmq-local", "size": 268435456, "count": 1, "seconds": 0.8310305389995847, "mib_per_second": 308.0512544198186, "verified": true}
+{"binary": "mqhole-cli", "broker": "lavinmq-local", "size": 268435456, "count": 1, "seconds": 0.8323001660000955, "mib_per_second": 307.58133959085455, "verified": true}
+{"binary": "mqhole-encrypted-cli", "broker": "lavinmq-local", "size": 1024, "count": 1, "seconds": 0.13304462199994305, "mib_per_second": 0.007340112552617257, "verified": true}
+{"binary": "mqhole-encrypted-cli", "broker": "lavinmq-local", "size": 1024, "count": 1, "seconds": 0.12483060600061435, "mib_per_second": 0.007823101491594087, "verified": true}
+{"binary": "mqhole-encrypted-cli", "broker": "lavinmq-local", "size": 1024, "count": 1, "seconds": 0.12332414499996958, "mib_per_second": 0.007918664264814006, "verified": true}
+{"binary": "mqhole-encrypted-cli", "broker": "lavinmq-local", "size": 16777216, "count": 1, "seconds": 0.22929725800076994, "mib_per_second": 69.77841837056017, "verified": true}
+{"binary": "mqhole-encrypted-cli", "broker": "lavinmq-local", "size": 16777216, "count": 1, "seconds": 0.2271383790002801, "mib_per_second": 70.44164033582483, "verified": true}
+{"binary": "mqhole-encrypted-cli", "broker": "lavinmq-local", "size": 16777216, "count": 1, "seconds": 0.2303398849999212, "mib_per_second": 69.46256832595655, "verified": true}
+{"binary": "mqhole-encrypted-cli", "broker": "lavinmq-local", "size": 268435456, "count": 1, "seconds": 0.8249323610007195, "mib_per_second": 310.32847309984083, "verified": true}
+{"binary": "mqhole-encrypted-cli", "broker": "lavinmq-local", "size": 268435456, "count": 1, "seconds": 0.729924143000062, "mib_per_second": 350.7213762622156, "verified": true}
+{"binary": "mqhole-encrypted-cli", "broker": "lavinmq-local", "size": 268435456, "count": 1, "seconds": 0.7306451030008247, "mib_per_second": 350.3753038904731, "verified": true}
+{"binary": "mqhole-cli", "broker": "rabbitmq-local", "size": 268435456, "count": 1, "seconds": 1.0394095500005278, "mib_per_second": 246.29367702064118, "verified": true}
+{"binary": "mqhole-cli", "broker": "rabbitmq-local", "size": 268435456, "count": 1, "seconds": 0.6348085919998994, "mib_per_second": 403.2711642945762, "verified": true}
+{"binary": "mqhole-cli", "broker": "rabbitmq-local", "size": 268435456, "count": 1, "seconds": 0.4242821610005194, "mib_per_second": 603.3720564548709, "verified": true}
+{"binary": "mqhole-encrypted-cli", "broker": "rabbitmq-local", "size": 1024, "count": 1, "seconds": 0.2267142109994893, "mib_per_second": 0.004307460461762584, "verified": true}
+{"binary": "mqhole-encrypted-cli", "broker": "rabbitmq-local", "size": 1024, "count": 1, "seconds": 0.2296288409997942, "mib_per_second": 0.004252786783002033, "verified": true}
+{"binary": "mqhole-encrypted-cli", "broker": "rabbitmq-local", "size": 1024, "count": 1, "seconds": 0.12265455999931874, "mib_per_second": 0.007961893141236853, "verified": true}
+{"binary": "mqhole-encrypted-cli", "broker": "rabbitmq-local", "size": 16777216, "count": 1, "seconds": 0.2299355920004018, "mib_per_second": 69.58470352850829, "verified": true}
+{"binary": "mqhole-encrypted-cli", "broker": "rabbitmq-local", "size": 16777216, "count": 1, "seconds": 0.22651433600003656, "mib_per_second": 70.63570581244544, "verified": true}
+{"binary": "mqhole-encrypted-cli", "broker": "rabbitmq-local", "size": 16777216, "count": 1, "seconds": 0.2265634619998309, "mib_per_second": 70.62038979617968, "verified": true}
+{"binary": "mqhole-encrypted-cli", "broker": "rabbitmq-local", "size": 268435456, "count": 1, "seconds": 0.5275888940004734, "mib_per_second": 485.22628681370674, "verified": true}
+{"binary": "mqhole-encrypted-cli", "broker": "rabbitmq-local", "size": 268435456, "count": 1, "seconds": 0.7342999010006679, "mib_per_second": 348.631396587601, "verified": true}
+{"binary": "mqhole-encrypted-cli", "broker": "rabbitmq-local", "size": 268435456, "count": 1, "seconds": 0.7283670990000246, "mib_per_second": 351.471119922169, "verified": true}
+{"binary": "tailcat-tar-cp", "broker": "local-direct", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 0.2031302510004025, "mib_per_second": 4.807568026871905, "verified": true, "scenario": "cli"}
+{"binary": "tailcat-tar-cp", "broker": "local-direct", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 0.15385062900168123, "mib_per_second": 6.347471611502664, "verified": true, "scenario": "cli"}
+{"binary": "tailcat-tar-cp", "broker": "local-direct", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 0.15903580200028955, "mib_per_second": 6.140519856014698, "verified": true, "scenario": "cli"}
+{"binary": "tailcat-tar-cp", "broker": "private-relay", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 0.16664164499889011, "mib_per_second": 5.8602548000921635, "verified": true, "scenario": "cli"}
+{"binary": "tailcat-tar-cp", "broker": "private-relay", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 0.1500096180006949, "mib_per_second": 6.509999245484887, "verified": true, "scenario": "cli"}
+{"binary": "tailcat-tar-cp", "broker": "private-relay", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 0.17158336199827318, "mib_per_second": 5.691475494050689, "verified": true, "scenario": "cli"}
+{"binary": "mqhole-tar-cli", "broker": "lavinmq-local", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 0.700452969998878, "mib_per_second": 1.3941871072394258, "verified": true, "scenario": "delay-10ms"}
+{"binary": "mqhole-tar-cli", "broker": "lavinmq-local", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 0.7991912969991972, "mib_per_second": 1.2219383565196418, "verified": true, "scenario": "delay-10ms"}
+{"binary": "mqhole-tar-cli", "broker": "lavinmq-local", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 0.8162302820001059, "mib_per_second": 1.1964301270555817, "verified": true, "scenario": "delay-10ms"}
+{"binary": "mqhole-tar-cli", "broker": "rabbitmq-local", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 0.7018093470014719, "mib_per_second": 1.3914925815286296, "verified": true, "scenario": "delay-10ms"}
+{"binary": "mqhole-tar-cli", "broker": "rabbitmq-local", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 0.7991357129994867, "mib_per_second": 1.222023348618168, "verified": true, "scenario": "delay-10ms"}
+{"binary": "mqhole-tar-cli", "broker": "rabbitmq-local", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 0.8071769769994717, "mib_per_second": 1.2098492992579981, "verified": true, "scenario": "delay-10ms"}
+{"binary": "tailcat-tar-cp", "broker": "local-direct", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 0.7214747950001765, "mib_per_second": 1.3535642641539003, "verified": true, "scenario": "delay-10ms"}
+{"binary": "tailcat-tar-cp", "broker": "local-direct", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 0.7602200250003079, "mib_per_second": 1.2845787638908939, "verified": true, "scenario": "delay-10ms"}
+{"binary": "tailcat-tar-cp", "broker": "local-direct", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 0.6928817899988644, "mib_per_second": 1.4094215118593325, "verified": true, "scenario": "delay-10ms"}
+{"binary": "tailcat-tar-cp", "broker": "private-relay", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 2.472130385998753, "mib_per_second": 0.3950287191690595, "verified": true, "scenario": "delay-10ms"}
+{"binary": "tailcat-tar-cp", "broker": "private-relay", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 1.8706392849999247, "mib_per_second": 0.522047466783549, "verified": true, "scenario": "delay-10ms"}
+{"binary": "tailcat-tar-cp", "broker": "private-relay", "size": 1024, "count": 1000, "archive_bytes": 1546240, "seconds": 2.9726571570008673, "mib_per_second": 0.32851501146040674, "verified": true, "scenario": "delay-10ms"}

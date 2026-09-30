@@ -1,0 +1,17 @@
+{
+  "deleted_cloud_instance_ids": [
+    405103,
+    405104,
+    405110
+  ],
+  "unrelated_cloud_instances_preserved": true,
+  "removed_containers": [
+    "mqhole-bench-sender",
+    "mqhole-bench-receiver",
+    "mqhole-bench-lavinmq",
+    "mqhole-bench-rabbitmq",
+    "mqhole-bench-derp"
+  ],
+  "removed_network": "mqhole-bench",
+  "api_key_file_unchanged": true
+}

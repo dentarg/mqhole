@@ -1,0 +1,2 @@
+pong in 44.98ms via DERP(bench)
+pong in 21.71ms via 172.18.0.5:53244
