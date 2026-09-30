@@ -14,6 +14,34 @@ end
 # Opt-in integration check: use a disposable broker, never a production queue.
 if url = ENV["MQHOLE_TEST_AMQP_URL"]?
   describe Mqhole::AMQPBroker do
+    it "fails a buffered transfer when the broker rejects a publish" do
+      queue_name = "mqhole-spec-#{Random::Secure.hex(12)}"
+      completed = false
+      AMQP::Client.start(url) do |connection|
+        connection.channel do |channel|
+          arguments = AMQP::Client::Arguments.new({
+            "x-max-length" => 1_i32,
+            "x-overflow"   => "reject-publish",
+          })
+          queue = channel.queue(queue_name, args: arguments)
+          broker = Mqhole::AMQPBroker.new(channel, queue, confirm_window: 2)
+
+          expect_raises(Mqhole::Transfer::Error, "broker rejected a published message") do
+            Mqhole::Sender.new(broker).send(IO::Memory.new("payload"), nil, 7_u64) do |progress|
+              completed = progress.complete
+            end
+          end
+          completed.should be_false
+        end
+      end
+    ensure
+      if queue_name
+        AMQP::Client.start(url) do |connection|
+          connection.channel { |channel| channel.queue_delete(queue_name) }
+        end
+      end
+    end
+
     it "does not replay a transfer when an established broker fails" do
       queue_name = "mqhole-spec-#{Random::Secure.hex(12)}"
       cli = BrokerRetryCLI.new(IO::Memory.new, IO::Memory.new, IO::Memory.new)
