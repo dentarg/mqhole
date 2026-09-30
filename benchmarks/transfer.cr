@@ -1,9 +1,15 @@
 require "../src/mqhole"
 require "digest/sha256"
 
+# Keep client diagnostics separate from machine-readable benchmark results.
+Log.setup(:info, Log::IOBackend.new(STDERR))
+
 {% if flag?(:stream_benchmark) %}
   require "./stream_broker"
   alias BenchmarkBroker = StreamBroker
+{% elsif flag?(:websocket_benchmark) %}
+  require "./websocket_broker"
+  alias BenchmarkBroker = WebSocketBroker
 {% else %}
   alias BenchmarkBroker = Mqhole::AMQPBroker
 {% end %}

@@ -3,22 +3,49 @@
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 import time
 
 from run import ROOT
 
-MAP = "http://mqhole-bench-receiver:8880/derpmap.json"
+MAP = os.environ.get(
+    "TAILCAT_DERPMAP_URL", "http://mqhole-bench-receiver:8880/derpmap.json"
+)
+
+
+def route(relay):
+    if relay and MAP == "https://tailcat.dev/derpmap.json":
+        return "public-relay"
+    return "private-relay" if relay else "local-direct"
 
 
 def run_command(command, timeout=600):
+    if MAP == "https://tailcat.dev/derpmap.json":
+        timeout = min(timeout, 120)
+    container_command = command[:3] == ["docker", "exec", "mqhole-bench-sender"]
+    if container_command:
+        # Kill the complete client process group inside its container on timeout.
+        command = [
+            *command[:3],
+            "timeout",
+            "--kill-after=5",
+            str(timeout),
+            *command[3:],
+        ]
     try:
-        return subprocess.run(
-            command, check=False, capture_output=True, timeout=timeout
+        result = subprocess.run(
+            command,
+            check=False,
+            capture_output=True,
+            timeout=timeout + 10 if container_command else timeout,
         )
     except subprocess.TimeoutExpired:
         # TimeoutExpired includes argv, which contains the private address.
         raise TimeoutError(f"tailcat command exceeded {timeout} seconds") from None
+    if result.returncode == 124:
+        raise TimeoutError(f"tailcat command exceeded {timeout} seconds")
+    return result
 
 
 def run(size, count, relay=False, scenario="lan"):
@@ -62,7 +89,7 @@ def run(size, count, relay=False, scenario="lan"):
     return {
         "binary": "tailcat-cp",
         "scenario": scenario,
-        "broker": "private-relay" if relay else "local-direct",
+        "broker": route(relay),
         "size": size,
         "count": count,
         "seconds": elapsed,

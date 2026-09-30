@@ -14,6 +14,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--region", default="scaleway::nl-ams")
     parser.add_argument("--suffix", default=time.strftime("%Y%m%d"))
+    parser.add_argument("--label", default="cloud", help="broker alias suffix")
     args = parser.parse_args()
     key = os.environ["CLOUDAMQP_API_KEY"]
     os.umask(0o077)
@@ -54,6 +55,7 @@ def main():
                 },
             )
         assert instance.get("plan", plan) == plan
+        assert instance.get("region", args.region) == args.region
         for _ in range(60):
             detail = request("/instances/" + str(instance["id"]))
             url = (detail.get("urls") or {}).get("external") or detail.get("url")
@@ -62,8 +64,10 @@ def main():
             time.sleep(5)
         else:
             raise TimeoutError("instance provisioning timed out")
-        (ROOT / (backend + "-cloud.json")).write_text(json.dumps(detail))
-        connections[backend + "-cloud"] = url
+        alias = backend + "-" + args.label
+        detail_name = backend if args.label == "cloud" else alias
+        (ROOT / (detail_name + "-cloud.json")).write_text(json.dumps(detail))
+        connections[alias] = url
         config.write_text(json.dumps(connections))
         config.chmod(0o600)
         print(f"{backend} instance_id={instance['id']} ready=true")

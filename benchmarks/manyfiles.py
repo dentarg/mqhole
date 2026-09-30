@@ -13,7 +13,7 @@ from run import ROOT, client, stop_clients
 
 
 def run(broker, count):
-    use_tailcat = broker in ("local-direct", "private-relay")
+    use_tailcat = broker in ("local-direct", "private-relay", "public-relay")
     sources = []
     for index in range(count):
         path = ROOT / f"tailcat-source-1024-{index}"

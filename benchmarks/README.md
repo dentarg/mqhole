@@ -298,3 +298,97 @@ This measures a fresh tailcat client connecting to a running exec server,
 writing actual file bytes and waiting for the remote command to close the
 connection. SHA-256 is verified after the timer. The receiver does not implement
 mqhole's manifest, offline buffering, or hook acknowledgement semantics.
+
+## Public DERP versus free regional brokers
+
+Use a fresh `MQHOLE_BENCH_DIR` to keep this experiment separate from local
+results. Mount that directory at `/bench` in both clients and copy the built
+`mqhole-current`, `transfer-current`, and `tailcat-bin` into it. No local broker
+or private DERP container is needed. Provision each region with distinct names
+and aliases, for example:
+
+```sh
+python3 benchmarks/cloud.py --region scaleway::nl-ams \
+  --suffix public-ams --label ams
+python3 benchmarks/cloud.py --region amazon-web-services::eu-north-1 \
+  --suffix public-stockholm --label stockholm
+python3 benchmarks/cloud.py --region amazon-web-services::us-east-1 \
+  --suffix public-virginia --label virginia
+export TAILCAT_DERPMAP_URL=https://tailcat.dev/derpmap.json
+```
+
+Start the file and exec servers as above, using that public map URL in both
+server commands. Keep their addresses private. To prevent direct paths,
+including public-address hairpin paths, apply these rules inside both dedicated
+client containers before starting the servers:
+
+```sh
+for role in sender receiver; do
+  docker exec "mqhole-bench-$role" iptables -A OUTPUT -o lo -j ACCEPT
+  docker exec "mqhole-bench-$role" iptables -A OUTPUT \
+    -p udp ! --dport 53 -j DROP
+done
+```
+
+Loopback is allowed because Docker's embedded DNS rewrites ports internally.
+Verify both addresses with `tailcat ping --until-direct --timeout=5s`: successful
+pongs must name a public DERP region, and the command must fail to find a direct
+path. Record sanitized pings and the public map. Check routing again after the
+measurements. Do not use `tailcat perf`: it disallows public relays. This matrix
+uses bounded, sequential copies of real files, with hash verification. Public
+copy commands have a 120-second deadline and terminate their container-side
+process group on timeout:
+
+```sh
+python3 benchmarks/public_matrix.py \
+  --brokers lavinmq-ams,rabbitmq-ams,lavinmq-stockholm,rabbitmq-stockholm,lavinmq-virginia,rabbitmq-virginia
+```
+
+Each of three rounds measures 1 KiB, 1 MiB, and 16 MiB encrypted CLI transfers,
+1,000 tar-batched tiny files, and ready-connection AMQP diagnostics. The public
+relay also gets raw byte-stream copies, and one 100-file individual-copy sample.
+Tar mqhole transfers use TLS but no payload encryption; the individual-file
+comparison uses payload encryption for both tools. Timers follow the definitions
+above. The recorded matrix is sequential, not a concurrent load test.
+
+To isolate upload from download, build `directions.cr` and give it a random
+payload of at most 8 MiB. It first publishes the entire payload with a window of
+32 confirmations, then consumes it, verifies its hash and removes its queue.
+This fits under the observed 15 MB RabbitMQ queue policy:
+
+```sh
+crystal build --release benchmarks/directions.cr \
+  -o "$MQHOLE_BENCH_DIR/directions"
+docker exec mqhole-bench-sender python3 /scripts/launch.py rabbitmq-ams \
+  /bench/directions /bench/payload-8388608 131072 persistent
+```
+
+The last argument can be `transient` to diagnose persistence overhead; this does
+not change mqhole's persistent production messages. Socket-option experiments
+use separate private connection aliases with `tcp_nodelay=true`,
+`frame_max=1048576`, or `buffer_size=65536` appended to the URL query. Preserve TLS
+certificate verification. `ss -tin` in the sender shows the remote receive
+window (`snd_wnd`), RTT and time limited by that window (`rwnd_limited`); redact
+endpoint addresses before archiving it. `docker exec mqhole-bench-sender
+python3 /scripts/tcp_sample.py` emits those statistics with broker aliases in
+place of endpoint addresses. These are endpoint observations, not
+access to the provider's underlying broker configuration.
+
+Delete only the subscriptions and containers created for this experiment when
+finished. Preserve unrelated subscriptions and the API key.
+
+A further diagnostic uses CloudAMQP's documented `/ws/amqp` endpoint on port
+443. It reuses mqhole's persistent queues, bounded confirmations and deferred
+full-file acknowledgements; only the connection transport changes. It is a
+benchmark client, not a new production CLI option:
+
+```sh
+crystal build --release -Dwebsocket_benchmark benchmarks/transfer.cr \
+  -o "$MQHOLE_BENCH_DIR/transfer-websocket"
+python3 benchmarks/run.py --broker rabbitmq-ams --binary transfer-websocket \
+  --sizes 1024,16777216 --scenario websocket-endpoint
+```
+
+The supplied broker URL remains AMQPS: the diagnostic takes its credentials and
+vhost and connects to the same hostname over verified HTTPS. This avoids the
+pinned AMQP client's fixed empty WebSocket path, without modifying dependencies.

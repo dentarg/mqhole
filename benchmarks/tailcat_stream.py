@@ -3,11 +3,10 @@
 import argparse
 import hashlib
 import json
-import subprocess
 import time
 
 from run import ROOT
-from tailcat import MAP
+from tailcat import MAP, route, run_command
 
 
 def run(size, relay=False, scenario="lan"):
@@ -15,28 +14,23 @@ def run(size, relay=False, scenario="lan"):
     assert payload.exists(), "generate payloads with run.py first"
     address = (ROOT / "tailcat-stream-address").read_text().strip()
     started = time.perf_counter()
-    try:
-        result = subprocess.run(
-            [
-                "docker",
-                "exec",
-                "mqhole-bench-sender",
-                "timeout",
-                "600",
-                "sh",
-                "-c",
-                'exec /bench/tailcat-bin --derpmap-url="$1" "$2" < "$3"',
-                "sh",
-                MAP,
-                address,
-                "/bench/" + payload.name,
-            ],
-            check=False,
-            capture_output=True,
-            timeout=610,
-        )
-    except subprocess.TimeoutExpired:
-        raise TimeoutError("tailcat stream exceeded 610 seconds") from None
+    result = run_command(
+        [
+            "docker",
+            "exec",
+            "mqhole-bench-sender",
+            "timeout",
+            "600",
+            "sh",
+            "-c",
+            'exec /bench/tailcat-bin --derpmap-url="$1" "$2" < "$3"',
+            "sh",
+            MAP,
+            address,
+            "/bench/" + payload.name,
+        ],
+        timeout=610,
+    )
     elapsed = time.perf_counter() - started
     if result.returncode:
         raise RuntimeError(result.stderr.decode().replace(address, "<address>"))
@@ -49,7 +43,7 @@ def run(size, relay=False, scenario="lan"):
     return {
         "binary": "tailcat-stream",
         "scenario": scenario,
-        "broker": "private-relay" if relay else "local-direct",
+        "broker": route(relay),
         "size": size,
         "count": 1,
         "seconds": elapsed,
