@@ -64,11 +64,19 @@ module Mqhole
 
     def get(timeout : Time::Span) : BrokerMessage?
       deliveries = @deliveries || subscribe
-      select
-      when message = deliveries.receive
-        message
-      when timeout(timeout)
-        nil
+      deadline = Time.instant + timeout
+      loop do
+        raise Transfer::Error.new("broker consumer closed") if @channel.closed?
+        remaining = deadline - Time.instant
+        return nil unless remaining.positive?
+
+        select
+        when message = deliveries.receive
+          return message
+        when timeout(Math.min(remaining, 1.second))
+          # Connection loss also closes the channel, but the client does not
+          # call on_close for transport errors. Check without polling AMQP.
+        end
       end
     rescue Channel::ClosedError
       raise Transfer::Error.new("broker consumer closed")

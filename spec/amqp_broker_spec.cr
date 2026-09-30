@@ -3,6 +3,31 @@ require "./spec_helper"
 # Opt-in integration check: use a disposable broker, never a production queue.
 if url = ENV["MQHOLE_TEST_AMQP_URL"]?
   describe Mqhole::AMQPBroker do
+    it "stops waiting when the connection closes without a channel callback" do
+      queue_name = "mqhole-spec-#{Random::Secure.hex(12)}"
+      connection = AMQP::Client.new(url).connect
+      channel = connection.channel
+      broker = Mqhole::AMQPBroker.new(channel, channel.queue(queue_name))
+      spawn do
+        sleep 50.milliseconds
+        connection.close
+      end
+      started = Time.instant
+
+      expect_raises(Mqhole::Transfer::Error, "broker consumer closed") do
+        broker.get(10.seconds)
+      end
+      (Time.instant - started).should be < 2.seconds
+    ensure
+      broker.try(&.close)
+      connection.try(&.close)
+      if queue_name
+        AMQP::Client.start(url) do |cleanup|
+          cleanup.channel { |ch| ch.queue_delete(queue_name) }
+        end
+      end
+    end
+
     it "confirms a windowed transfer and requeues it until delivery succeeds" do
       queue_name = "mqhole-spec-#{Random::Secure.hex(12)}"
       data = Random::Secure.random_bytes(1024 * 1024)
