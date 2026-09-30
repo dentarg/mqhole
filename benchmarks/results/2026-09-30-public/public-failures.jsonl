@@ -1,0 +1,4 @@
+{"broker":"rabbitmq-virginia","binary":"transfer-current","size":16777216,"stage":"warm","error":"JSONDecodeError: client diagnostic appeared on stdout","verified":false}
+{"broker": "public-relay", "binary": "tailcat-cp", "size": 1048576, "count": 1, "verified": false, "error": "Copy did not exit after more than 120 seconds; terminated", "timestamp": 1790808025.8304937}
+{"broker": "rabbitmq-ams-nodelay", "binary": "transfer-current", "size": 16777216, "count": 1, "verified": false, "error": "Benchmark cleanup rejected a Crystal-only URL option; result excluded"}
+{"broker": "rabbitmq-ams-frame1m", "binary": "transfer-current", "size": 16777216, "count": 1, "verified": false, "error": "Benchmark cleanup rejected requested frame_max above Pika maximum; result excluded"}

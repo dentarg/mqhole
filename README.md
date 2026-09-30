@@ -144,10 +144,11 @@ is bounded. Acknowledgement metadata still grows with the number of chunks.
 
 ## Benchmarks
 
-See [the benchmark report](benchmarks/RESULTS.md) for comparisons with tailcat,
-AMQP, MQTT, and streams on local brokers and free CloudAMQP plans. It includes
-small and large files, many-file transfers, encryption, memory use, and added
-network delay, with raw measurements and reproduction instructions.
+See [public Tailcat relays versus free CloudAMQP brokers](benchmarks/PUBLIC_RESULTS.md)
+for the hosted-service comparison across regions and the TCP throughput
+diagnosis. The [local benchmark report](benchmarks/RESULTS.md) covers the
+implementation improvements, private relays, MQTT and streams. Both reports
+include verified results and reproduction instructions.
 
 ## Development
 

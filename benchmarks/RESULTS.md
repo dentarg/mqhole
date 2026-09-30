@@ -8,6 +8,10 @@ with SHA-256. Failures are reported separately and never treated as throughput.
 [CSV summary](results/2026-09-30/summary.csv) ·
 [Data definitions](results/README.md)
 
+For the hosted-service comparison, see the follow-up [public Tailcat relays
+versus free regional CloudAMQP brokers](PUBLIC_RESULTS.md). The Tailcat relays
+in this original report are private containers on the same VM.
+
 ## Findings
 
 Keep AMQP as mqhole's production transport. Pipelining confirmations and

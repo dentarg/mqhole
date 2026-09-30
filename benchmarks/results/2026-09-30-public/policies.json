@@ -1,0 +1,257 @@
+{
+  "lavinmq-ams": {
+    "policies": [
+      {
+        "pattern": "(^celeryev\\..*|.*celery\\.pidbox$)",
+        "apply-to": "queues",
+        "definition": {
+          "message-ttl": 60000,
+          "expires": 60000,
+          "max-length": 1000
+        },
+        "priority": -9
+      },
+      {
+        "pattern": "^amq\\.gen-.*",
+        "apply-to": "queues",
+        "definition": {
+          "expires": 60000,
+          "max-length": 1000
+        },
+        "priority": -8
+      }
+    ],
+    "operator-policies": [
+      {
+        "pattern": ".*",
+        "apply-to": "queues",
+        "definition": {
+          "max-length": 20000,
+          "max-length-bytes": 1073741824
+        },
+        "priority": 0
+      }
+    ]
+  },
+  "rabbitmq-ams": {
+    "policies": [
+      {
+        "pattern": "^(?!amq\\.).+",
+        "apply-to": "queues",
+        "definition": {
+          "expires": 2419200000
+        },
+        "priority": -10
+      },
+      {
+        "pattern": "(^celeryev\\..*|.*celery\\.pidbox$)",
+        "apply-to": "queues",
+        "definition": {
+          "expires": 60000,
+          "max-length": 1000,
+          "message-ttl": 60000
+        },
+        "priority": -9
+      },
+      {
+        "pattern": ".*",
+        "apply-to": "queues",
+        "definition": {
+          "max-length-bytes": 15000000,
+          "stream-max-segment-size-bytes": 5000000
+        },
+        "priority": -8
+      },
+      {
+        "pattern": "^amq\\.gen-.*",
+        "apply-to": "queues",
+        "definition": {
+          "expires": 60000,
+          "max-length": 1000
+        },
+        "priority": -8
+      }
+    ],
+    "operator-policies": [
+      {
+        "pattern": ".*",
+        "apply-to": "queues",
+        "definition": {
+          "max-length": 10000,
+          "max-length-bytes": 1073741824
+        },
+        "priority": 0
+      }
+    ]
+  },
+  "lavinmq-stockholm": {
+    "policies": [
+      {
+        "pattern": "(^celeryev\\..*|.*celery\\.pidbox$)",
+        "apply-to": "queues",
+        "definition": {
+          "message-ttl": 60000,
+          "expires": 60000,
+          "max-length": 1000
+        },
+        "priority": -9
+      },
+      {
+        "pattern": "^amq\\.gen-.*",
+        "apply-to": "queues",
+        "definition": {
+          "expires": 60000,
+          "max-length": 1000
+        },
+        "priority": -8
+      }
+    ],
+    "operator-policies": [
+      {
+        "pattern": ".*",
+        "apply-to": "queues",
+        "definition": {
+          "max-length": 20000,
+          "max-length-bytes": 1073741824
+        },
+        "priority": 0
+      }
+    ]
+  },
+  "rabbitmq-stockholm": {
+    "policies": [
+      {
+        "pattern": "^(?!amq\\.).+",
+        "apply-to": "queues",
+        "definition": {
+          "expires": 2419200000
+        },
+        "priority": -10
+      },
+      {
+        "pattern": "(^celeryev\\..*|.*celery\\.pidbox$)",
+        "apply-to": "queues",
+        "definition": {
+          "expires": 60000,
+          "max-length": 1000,
+          "message-ttl": 60000
+        },
+        "priority": -9
+      },
+      {
+        "pattern": ".*",
+        "apply-to": "queues",
+        "definition": {
+          "max-length-bytes": 15000000,
+          "stream-max-segment-size-bytes": 5000000
+        },
+        "priority": -8
+      },
+      {
+        "pattern": "^amq\\.gen-.*",
+        "apply-to": "queues",
+        "definition": {
+          "expires": 60000,
+          "max-length": 1000
+        },
+        "priority": -8
+      }
+    ],
+    "operator-policies": [
+      {
+        "pattern": ".*",
+        "apply-to": "queues",
+        "definition": {
+          "max-length": 10000,
+          "max-length-bytes": 1073741824
+        },
+        "priority": 0
+      }
+    ]
+  },
+  "lavinmq-virginia": {
+    "policies": [
+      {
+        "pattern": "(^celeryev\\..*|.*celery\\.pidbox$)",
+        "apply-to": "queues",
+        "definition": {
+          "message-ttl": 60000,
+          "expires": 60000,
+          "max-length": 1000
+        },
+        "priority": -9
+      },
+      {
+        "pattern": "^amq\\.gen-.*",
+        "apply-to": "queues",
+        "definition": {
+          "expires": 60000,
+          "max-length": 1000
+        },
+        "priority": -8
+      }
+    ],
+    "operator-policies": [
+      {
+        "pattern": ".*",
+        "apply-to": "queues",
+        "definition": {
+          "max-length": 20000,
+          "max-length-bytes": 1073741824
+        },
+        "priority": 0
+      }
+    ]
+  },
+  "rabbitmq-virginia": {
+    "policies": [
+      {
+        "pattern": "^(?!amq\\.).+",
+        "apply-to": "queues",
+        "definition": {
+          "expires": 2419200000
+        },
+        "priority": -10
+      },
+      {
+        "pattern": "(^celeryev\\..*|.*celery\\.pidbox$)",
+        "apply-to": "queues",
+        "definition": {
+          "expires": 60000,
+          "max-length": 1000,
+          "message-ttl": 60000
+        },
+        "priority": -9
+      },
+      {
+        "pattern": ".*",
+        "apply-to": "queues",
+        "definition": {
+          "max-length-bytes": 15000000,
+          "stream-max-segment-size-bytes": 5000000
+        },
+        "priority": -8
+      },
+      {
+        "pattern": "^amq\\.gen-.*",
+        "apply-to": "queues",
+        "definition": {
+          "expires": 60000,
+          "max-length": 1000
+        },
+        "priority": -8
+      }
+    ],
+    "operator-policies": [
+      {
+        "pattern": ".*",
+        "apply-to": "queues",
+        "definition": {
+          "max-length": 10000,
+          "max-length-bytes": 1073741824
+        },
+        "priority": 0
+      }
+    ]
+  }
+}

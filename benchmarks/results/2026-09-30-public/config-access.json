@@ -1,0 +1,29 @@
+{
+  "rabbitmq-ams": {
+    "rabbit.initial_frame_max": null,
+    "rabbit.ssl_cert_login_from": "common_name",
+    "rabbit.ssl_options.fail_if_no_peer_cert": "false",
+    "rabbit.ssl_options.verify": null,
+    "rabbitmq_mqtt.ssl_cert_login": null,
+    "rabbitmq_mqtt.tcp_listen_options.sndbuf": 16384,
+    "rabbitmq_mqtt.tcp_listen_options.recbuf": 16384
+  },
+  "rabbitmq-stockholm": {
+    "rabbit.initial_frame_max": null,
+    "rabbit.ssl_cert_login_from": "common_name",
+    "rabbit.ssl_options.fail_if_no_peer_cert": "false",
+    "rabbit.ssl_options.verify": null,
+    "rabbitmq_mqtt.ssl_cert_login": null,
+    "rabbitmq_mqtt.tcp_listen_options.sndbuf": 16384,
+    "rabbitmq_mqtt.tcp_listen_options.recbuf": 16384
+  },
+  "rabbitmq-virginia": {
+    "rabbit.initial_frame_max": null,
+    "rabbit.ssl_cert_login_from": "common_name",
+    "rabbit.ssl_options.fail_if_no_peer_cert": "false",
+    "rabbit.ssl_options.verify": null,
+    "rabbitmq_mqtt.ssl_cert_login": null,
+    "rabbitmq_mqtt.tcp_listen_options.sndbuf": 16384,
+    "rabbitmq_mqtt.tcp_listen_options.recbuf": 16384
+  }
+}

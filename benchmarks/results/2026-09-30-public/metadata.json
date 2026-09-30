@@ -1,0 +1,59 @@
+{
+  "date": "2026-09-30",
+  "production_commit": "10821b22adc35ebeb3fe22b47c2deadf5cf9f597",
+  "tailcat_commit": "b4dc28e8aa8936f0a90a41ad8293a64e3d6b645f",
+  "public_derpmap_url": "https://tailcat.dev/derpmap.json",
+  "selected_public_region": "fra",
+  "public_region_id": 303,
+  "container_ipv6_enabled": false,
+  "peer_udp": "Blocked except DNS and loopback in both clients",
+  "client_vm": "Same four-core ARM64 VM as local benchmark; both peers share origin",
+  "brokers": [
+    {
+      "alias": "lavinmq-ams",
+      "region": "scaleway::nl-ams",
+      "plan": "lemming",
+      "version": "2.9.3"
+    },
+    {
+      "alias": "rabbitmq-ams",
+      "region": "scaleway::nl-ams",
+      "plan": "lemur",
+      "version": "4.3.5"
+    },
+    {
+      "alias": "lavinmq-stockholm",
+      "region": "amazon-web-services::eu-north-1",
+      "plan": "lemming",
+      "version": "2.9.3"
+    },
+    {
+      "alias": "rabbitmq-stockholm",
+      "region": "amazon-web-services::eu-north-1",
+      "plan": "lemur",
+      "version": "4.3.5"
+    },
+    {
+      "alias": "lavinmq-virginia",
+      "region": "amazon-web-services::us-east-1",
+      "plan": "lemming",
+      "version": "2.9.2"
+    },
+    {
+      "alias": "rabbitmq-virginia",
+      "region": "amazon-web-services::us-east-1",
+      "plan": "lemur",
+      "version": "4.3.5"
+    }
+  ],
+  "binaries": {
+    "mqhole-current": "3565143be09dda77f2639a33e5631a7808919d5afe8a5c7f6a87df5c51a10916",
+    "transfer-current": "493a6a90435de54ca545cd40737eceedae088d9851098e5f6b0d9d6cd3ce7c8a",
+    "directions": "5c27efefb809f03bb516b1a533047d0232b3b9e042ffc7c6e380e902a70ea228",
+    "tailcat-bin": "609f4800b5e8e5d9457568fdd6a88a1360bb3d3a134baa5757a4330aff14e97d",
+    "transfer-websocket": "2e25bfac5309d9a9a7ecbeb5dcad3c11d9bcf45d48506a25a98419eccc29628e"
+  },
+  "benchmark_tools_commit": "910d7b3184ffaa8f48b42fcf4380e016b862f031",
+  "initial_transfer_binary_sha256": "77dc6a3f9b1387551b0c9c9984187f2ed539436e78fc439187fc7511ced81afc",
+  "instrumentation_note": "Initial matrix batch used prior transfer binary; after one stdout parsing failure, benchmark diagnostics were redirected to stderr. Production transfer code is unchanged."
+}

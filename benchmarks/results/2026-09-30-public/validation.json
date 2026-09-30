@@ -1,0 +1,30 @@
+{
+  "checks": {
+    "make check": {
+      "exit_code": 0
+    },
+    "ruff check benchmarks": {
+      "exit_code": 0
+    },
+    "ruff format --check benchmarks": {
+      "exit_code": 0
+    },
+    "python3 -m compileall -q benchmarks": {
+      "exit_code": 0
+    },
+    "git diff --check": {
+      "exit_code": 0
+    }
+  },
+  "successful_verified_trials": {
+    "public-results.jsonl": 130,
+    "large-results.jsonl": 8,
+    "directions-results.jsonl": 36,
+    "socket-results.jsonl": 8,
+    "websocket-results.jsonl": 18
+  },
+  "hosted_probe_smokes_verified": true,
+  "timeout_message_redaction_verified": true,
+  "container_timeout_child_cleanup_verified": true,
+  "production_code_unchanged": true
+}

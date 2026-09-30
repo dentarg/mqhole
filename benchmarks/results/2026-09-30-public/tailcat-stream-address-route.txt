@@ -1,0 +1,6 @@
+pong in 49.44ms via DERP(fra)
+pong in 76.01ms via DERP(fra)
+pong in 49.9ms via DERP(fra)
+pong in 49.9ms via DERP(fra)
+pong in 49.26ms via DERP(fra)
+2026/09/30 22:30:16 no direct path to the server after 5s
