@@ -42,6 +42,11 @@ bin/mqhole regions scaleway
 `mqhole` creates an instance named after the selected region, for example
 `mqhole-lavinmq-scaleway-nl-ams`, and reuses it on later runs.
 
+To use an existing RabbitMQ or LavinMQ broker, set `AMQP_URL` to its
+`amqp://` or `amqps://` connection URL. This bypasses CloudAMQP provisioning
+and does not require an API key. Keep credentials in the environment rather
+than command arguments.
+
 ## Usage
 
 Send stdin:

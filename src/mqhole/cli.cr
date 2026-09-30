@@ -217,8 +217,8 @@ module Mqhole
           bytes: bytes,
           rate: rate.round.to_i64.to_s,
           rate_human: "#{human_bytes(rate)}/s",
-          region: region,
-          instance_id: instance.id.to_s
+          region: instance ? region : "external",
+          instance_id: instance.try(&.id.to_s) || "external"
         )
       end
     end
@@ -255,7 +255,7 @@ module Mqhole
       echo : Bool?,
       timeout : Time::Span,
       region : String,
-      instance : CloudAMQP::Instance,
+      instance : CloudAMQP::Instance?,
       verbose : Bool,
     ) : Nil
       loop do
@@ -283,7 +283,7 @@ module Mqhole
       echo : Bool?,
       timeout : Time::Span,
       region : String,
-      instance : CloudAMQP::Instance,
+      instance : CloudAMQP::Instance?,
       verbose : Bool,
     ) : Nil
       started_at = Time.instant
@@ -306,7 +306,7 @@ module Mqhole
       hook_mode : Hook::Mode,
       echo : Bool?,
       region : String,
-      instance : CloudAMQP::Instance,
+      instance : CloudAMQP::Instance?,
       started_at : Time::Instant,
     ) : Nil
       begin
@@ -336,8 +336,8 @@ module Mqhole
           bytes: result.bytes_written.to_s,
           rate: rate.round.to_i64.to_s,
           rate_human: "#{human_bytes(rate)}/s",
-          region: region,
-          instance_id: instance.id.to_s
+          region: instance ? region : "external",
+          instance_id: instance.try(&.id.to_s) || "external"
         )
       ensure
         result.cleanup
@@ -488,7 +488,14 @@ module Mqhole
       passphrase
     end
 
-    private def with_broker(api_key : String?, region : String, name : String, & : Broker, CloudAMQP::Instance -> _) : Nil
+    private def with_broker(api_key : String?, region : String, name : String, & : Broker, CloudAMQP::Instance? -> _) : Nil
+      if url = ENV["AMQP_URL"]?
+        AMQPBroker.open(url, Protocol.queue_name(name)) do |broker|
+          yield broker, nil
+        end
+        return
+      end
+
       instance = cloudamqp(api_key).ensure_instance(
         region,
         wait_timeout: DEFAULT_PROVISION_TIMEOUT,
