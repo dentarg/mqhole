@@ -137,6 +137,10 @@ different names if you need overlapping transfers.
 Publishes use a bounded window of 32 outstanding broker confirmations. A send
 reports success only after every message has been confirmed; persistent messages
 and acknowledgement after successful output/hook delivery remain in use.
+Receivers subscribe instead of polling and discard chunk buffers after writing
+them to the temporary file. Broker prefetch is unlimited because acknowledgements
+are deferred until the entire transfer is delivered; the local delivery buffer
+is bounded. Acknowledgement metadata still grows with the number of chunks.
 
 ## Development
 
@@ -144,6 +148,12 @@ Run the checks used by CI:
 
 ```sh
 make check
+```
+
+To run the broker integration spec against a disposable local broker:
+
+```sh
+MQHOLE_TEST_AMQP_URL=amqp://guest:guest@localhost crystal spec
 ```
 
 The live smoke test used during development sent and received data through a

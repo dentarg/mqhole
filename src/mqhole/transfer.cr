@@ -111,6 +111,11 @@ module Mqhole
       @acked = false
     end
 
+    # Keep acknowledgement metadata, not payload bytes, until output succeeds.
+    def release_body : Nil
+      @body = Bytes.empty
+    end
+
     def ack : Nil
       return if @acked
 
@@ -281,6 +286,7 @@ module Mqhole
       messages << header
 
       manifest = Transfer::Manifest.from_json(String.new(header.body))
+      header.release_body
       decryption = decryption_context(manifest)
       bytes_written = receive_chunks(manifest, temp, messages, deadline, decryption) do |bytes, complete|
         yield Transfer::Progress.new(manifest.id, bytes, manifest.size, complete)
@@ -326,6 +332,7 @@ module Mqhole
         when Transfer::CHUNK_TYPE
           chunk = chunk_body(message.body, manifest, chunk_index, decryption)
           temp.write(chunk)
+          message.release_body
           bytes_written += chunk.size
           yield bytes_written, false
           chunk_index += 1
@@ -380,6 +387,7 @@ module Mqhole
       loop do
         message = next_message(deadline)
         messages << message
+        message.release_body
         return if message.correlation_id == manifest.id && message.type == Transfer::END_TYPE
       end
     rescue Transfer::TimeoutError
