@@ -1,8 +1,35 @@
 require "./spec_helper"
 
+private class BrokerRetryCLI < Mqhole::CLI
+  getter attempts = 0
+
+  def exercise(url : String, queue_name : String) : Nil
+    with_ready_broker(url, queue_name, 100.milliseconds, 1.millisecond) do |_broker|
+      @attempts += 1
+      raise AMQP::Client::Error.new("simulated transfer failure")
+    end
+  end
+end
+
 # Opt-in integration check: use a disposable broker, never a production queue.
 if url = ENV["MQHOLE_TEST_AMQP_URL"]?
   describe Mqhole::AMQPBroker do
+    it "does not replay a transfer when an established broker fails" do
+      queue_name = "mqhole-spec-#{Random::Secure.hex(12)}"
+      cli = BrokerRetryCLI.new(IO::Memory.new, IO::Memory.new, IO::Memory.new)
+
+      expect_raises(AMQP::Client::Error, "simulated transfer failure") do
+        cli.exercise(url, queue_name)
+      end
+      cli.attempts.should eq(1)
+    ensure
+      if queue_name
+        AMQP::Client.start(url) do |connection|
+          connection.channel { |channel| channel.queue_delete(queue_name) }
+        end
+      end
+    end
+
     it "stops waiting when the connection closes without a channel callback" do
       queue_name = "mqhole-spec-#{Random::Secure.hex(12)}"
       connection = AMQP::Client.new(url).connect

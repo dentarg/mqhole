@@ -517,15 +517,17 @@ module Mqhole
       & : Broker -> _
     ) : Nil
       deadline = Time.instant + timeout
+      transfer_started = false
 
       loop do
         begin
           AMQPBroker.open(url, queue_name) do |broker|
+            transfer_started = true
             yield broker
           end
           return
         rescue ex : AMQP::Client::Error
-          raise ex if Time.instant >= deadline
+          raise ex if transfer_started || Time.instant >= deadline
 
           sleep poll_interval
         end
