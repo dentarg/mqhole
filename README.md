@@ -134,6 +134,10 @@ expects each transfer's AMQP messages to stay contiguous in the queue, so
 concurrent sends to the same name can fail with a transfer id mismatch. Use
 different names if you need overlapping transfers.
 
+Publishes use a bounded window of 32 outstanding broker confirmations. A send
+reports success only after every message has been confirmed; persistent messages
+and acknowledgement after successful output/hook delivery remain in use.
+
 ## Development
 
 Run the checks used by CI:

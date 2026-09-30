@@ -129,6 +129,10 @@ module Mqhole
   abstract class Broker
     abstract def publish(type : String, correlation_id : String, message_id : String, body : Bytes) : Nil
     abstract def get(timeout : Time::Span) : BrokerMessage?
+
+    # Wait for buffered publishes before reporting a successful transfer.
+    def flush : Nil
+    end
   end
 
   class MemoryBroker < Broker
@@ -192,6 +196,7 @@ module Mqhole
         yield Transfer::Progress.new(id, bytes, manifest.size, complete: false)
       end
       @broker.publish(Transfer::END_TYPE, id, "#{id}:end", Bytes.empty)
+      @broker.flush
       yield Transfer::Progress.new(id, bytes_sent, manifest.size, complete: true)
 
       manifest

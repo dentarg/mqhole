@@ -3,7 +3,24 @@ require "./spec_helper"
 private class StopReceiveLoop < Exception
 end
 
+private class UnconfirmedBroker < Mqhole::MemoryBroker
+  def flush : Nil
+    raise Mqhole::Transfer::Error.new("publisher confirmation failed")
+  end
+end
+
 describe Mqhole::Transfer do
+  it "does not report completion before publisher confirmations succeed" do
+    progress = [] of Mqhole::Transfer::Progress
+    sender = Mqhole::Sender.new(UnconfirmedBroker.new)
+
+    expect_raises(Mqhole::Transfer::Error, "publisher confirmation failed") do
+      sender.send(IO::Memory.new("hello"), nil, 5_u64) { |event| progress << event }
+    end
+
+    progress.map(&.complete).should eq([false])
+  end
+
   it "round trips binary data through chunked broker messages" do
     data = Bytes[0, 1, 255, 65, 66]
     broker = Mqhole::MemoryBroker.new
