@@ -8,6 +8,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+    - name: Refresh APT package indexes
+      run: sudo apt-get update
+
     - parallel:
       - uses: actions/checkout@v7.0.0
       - uses: crystal-lang/install-crystal@v1
