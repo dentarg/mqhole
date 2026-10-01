@@ -9,6 +9,19 @@ private class UnconfirmedBroker < Mqhole::MemoryBroker
   end
 end
 
+private class IdleBroker < Mqhole::MemoryBroker
+  property idle_timeouts = 0
+
+  def get(timeout : Time::Span) : Mqhole::BrokerMessage?
+    if @idle_timeouts > 0
+      @idle_timeouts -= 1
+      nil
+    else
+      super
+    end
+  end
+end
+
 describe Mqhole::Transfer do
   it "does not report completion before publisher confirmations succeed" do
     progress = [] of Mqhole::Transfer::Progress
@@ -140,28 +153,27 @@ describe Mqhole::Transfer do
   end
 
   it "keeps receiving transfers across idle waits" do
-    broker = Mqhole::MemoryBroker.new
+    broker = IdleBroker.new
     sender = Mqhole::Sender.new(broker)
     sender.send(IO::Memory.new("one"), source_name: nil, size: 3_u64)
-
-    spawn do
-      sleep 20.milliseconds
-      sender.send(IO::Memory.new("two"), source_name: nil, size: 3_u64)
-    end
+    sender.send(IO::Memory.new("two"), source_name: nil, size: 3_u64)
+    broker.idle_timeouts = 2
 
     receiver = Mqhole::Receiver.new(broker)
     payloads = [] of String
 
     expect_raises(StopReceiveLoop) do
-      Mqhole::Transfer.receive_forever(receiver, 5.milliseconds) do |result|
+      Mqhole::Transfer.receive_forever(receiver, 5.seconds) do |result|
         payloads << File.read(result.path)
         result.ack
         result.cleanup
         raise StopReceiveLoop.new if payloads.size == 2
+        broker.idle_timeouts = 2
       end
     end
 
     payloads.should eq(["one", "two"])
+    broker.idle_timeouts.should eq(0)
     broker.acked_count.should eq(6)
   end
 
